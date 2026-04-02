@@ -34,3 +34,12 @@ jobs:
         run: |
           cd coletor
           python src/coletor.py
+
+      - name: Debug secrets
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          echo "URL começa com: ${SUPABASE_URL:0:20}"
+          echo "KEY começa com: ${SUPABASE_KEY:0:10}"
+          echo "KEY tamanho: ${#SUPABASE_KEY}"
