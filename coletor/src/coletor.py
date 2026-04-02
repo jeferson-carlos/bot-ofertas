@@ -3,6 +3,8 @@ import time
 import json
 import requests
 from dotenv import load_dotenv
+import sys, os
+sys.path.insert(0, os.path.dirname(__file__))
 from supabase_client import supabase
 import os
 
