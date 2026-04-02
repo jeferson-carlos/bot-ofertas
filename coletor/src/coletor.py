@@ -1,9 +1,9 @@
-import hmac
 import hashlib
 import time
 import json
 import requests
 from dotenv import load_dotenv
+from supabase_client import supabase
 import os
 
 load_dotenv()
@@ -12,8 +12,10 @@ APP_ID     = os.getenv("SHOPEE_APP_ID")
 SECRET_KEY = os.getenv("SHOPEE_SECRET")
 BASE_URL   = "https://open-api.affiliate.shopee.com.br/graphql"
 
+# Desconto mínimo para considerar a oferta (%)
+DESCONTO_MINIMO = 10
+
 def gerar_assinatura(app_id: str, timestamp: str, payload: str, secret: str) -> str:
-    # A string completa é a mensagem, sem chave separada
     string = f"{app_id}{timestamp}{payload}{secret}"
     return hashlib.sha256(string.encode("utf-8")).hexdigest()
 
@@ -25,20 +27,102 @@ def get_headers(payload: str) -> dict:
         "Authorization": f"SHA256 Credential={APP_ID}, Timestamp={timestamp}, Signature={assinatura}"
     }
 
-def testar_autenticacao():
+def buscar_ofertas(keyword: str = "oferta", pagina: int = 1, limite: int = 50) -> list:
+    """Busca produtos na Shopee e retorna apenas os com desconto."""
     payload = json.dumps({
-        "query": "{ productOfferV2(keyword: \"celular\", page: 1, limit: 3) { nodes { itemId productName priceMin priceMax priceDiscountRate commissionRate offerLink imageUrl } pageInfo { page limit hasNextPage } } }"
+        "query": f"""{{
+          productOfferV2(
+            keyword: "{keyword}",
+            listType: 1,
+            sortType: 5,
+            page: {pagina},
+            limit: {limite}
+          ) {{
+            nodes {{
+              itemId
+              productName
+              priceMin
+              priceMax
+              priceDiscountRate
+              commissionRate
+              offerLink
+              imageUrl
+              shopName
+            }}
+            pageInfo {{ page limit hasNextPage }}
+          }}
+        }}"""
     })
 
-    response = requests.post(
-        BASE_URL,
-        headers=get_headers(payload),
-        data=payload
-    )
+    response = requests.post(BASE_URL, headers=get_headers(payload), data=payload)
+    data = response.json()
 
-    print(f"Status: {response.status_code}")
-    result = response.json()
-    print(f"Resposta: {json.dumps(result, indent=2, ensure_ascii=False)}")
+    if "errors" in data:
+        print(f"❌ Erro na API: {data['errors']}")
+        return []
+
+    nodes = data["data"]["productOfferV2"]["nodes"]
+
+    # Filtra apenas produtos com desconto acima do mínimo
+    ofertas = [
+        n for n in nodes
+        if float(n.get("priceDiscountRate") or 0) >= DESCONTO_MINIMO
+    ]
+
+    print(f"📦 {len(nodes)} produtos recebidos → {len(ofertas)} com desconto ≥ {DESCONTO_MINIMO}%")
+    return ofertas
+
+def salvar_ofertas(ofertas: list) -> dict:
+    """Salva ofertas no Supabase ignorando duplicatas."""
+    novos = 0
+    duplicatas = 0
+
+    for oferta in ofertas:
+        produto_id = str(oferta["itemId"])
+
+        # Verifica se já existe no banco
+        existente = supabase.table("ofertas") \
+            .select("id") \
+            .eq("product_id", produto_id) \
+            .execute()
+
+        if existente.data:
+            duplicatas += 1
+            continue
+
+        # Monta o registro
+        registro = {
+            "product_id":           produto_id,
+            "titulo":               oferta["productName"],
+            "preco_original":       float(oferta["priceMax"]),
+            "preco_desconto":       float(oferta["priceMin"]),
+            "percentual_desconto":  int(float(oferta.get("priceDiscountRate") or 0)),
+            "link_afiliado":        oferta["offerLink"],
+            "imagem_url":           oferta.get("imageUrl"),
+            "loja":                 oferta.get("shopName"),
+            "status":               "pendente"
+        }
+
+        supabase.table("ofertas").insert(registro).execute()
+        novos += 1
+        print(f"✅ Salvo: {oferta['productName'][:50]}...")
+
+    return {"novos": novos, "duplicatas": duplicatas}
+
+def executar():
+    print("🔍 Buscando ofertas na Shopee...")
+    ofertas = buscar_ofertas(keyword="oferta", limite=50)
+
+    if not ofertas:
+        print("⚠️ Nenhuma oferta encontrada.")
+        return
+
+    print(f"\n💾 Salvando no Supabase...")
+    resultado = salvar_ofertas(ofertas)
+
+    print(f"\n📊 Resultado:")
+    print(f"   ✅ Novos: {resultado['novos']}")
+    print(f"   ⏭️  Duplicatas ignoradas: {resultado['duplicatas']}")
 
 if __name__ == "__main__":
-    testar_autenticacao()
+    executar()
