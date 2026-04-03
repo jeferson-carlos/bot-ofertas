@@ -22,6 +22,17 @@ const ICONS = {
       <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
     </svg>
   ),
+  planos: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+    </svg>
+  ),
+  config: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+    </svg>
+  ),
   lock: (
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
@@ -31,9 +42,14 @@ const ICONS = {
 }
 
 const MENU = [
-  { path: '/app/dashboard', label: 'Dashboard', icon: ICONS.dashboard, planoMinimo: null },
-  { path: '/app/ofertas',   label: 'Ofertas',   icon: ICONS.ofertas,   planoMinimo: null },
-  { path: '/app/keywords',  label: 'Keywords',  icon: ICONS.keywords,  planoMinimo: 'pro' },
+  { path: '/app/dashboard',     label: 'Dashboard',      icon: ICONS.dashboard, planoMinimo: null },
+  { path: '/app/ofertas',       label: 'Ofertas',        icon: ICONS.ofertas,   planoMinimo: null },
+  { path: '/app/keywords',      label: 'Keywords',       icon: ICONS.keywords,  planoMinimo: 'pro' },
+]
+
+const MENU_INFERIOR = [
+  { path: '/app/planos',        label: 'Planos',         icon: ICONS.planos,    planoMinimo: null },
+  { path: '/app/configuracoes', label: 'Configurações',  icon: ICONS.config,    planoMinimo: null },
 ]
 
 export default function AppLayout({ children }) {
@@ -46,6 +62,34 @@ export default function AppLayout({ children }) {
   }
 
   const plano = profile?.plan || 'free'
+
+  function renderItem(item) {
+    const bloqueado = item.planoMinimo && !temAcesso(item.planoMinimo)
+    if (bloqueado) {
+      return (
+        <button
+          key={item.path}
+          onClick={() => navigate('/app/planos')}
+          style={s.navItemBloqueado}
+          title={`Disponível no plano ${PLANO_LABEL[item.planoMinimo]}`}
+        >
+          <span style={s.navIcone}>{item.icon}</span>
+          <span style={s.navTexto}>{item.label}</span>
+          <span style={s.lockWrap}>{ICONS.lock}</span>
+        </button>
+      )
+    }
+    return (
+      <NavLink
+        key={item.path}
+        to={item.path}
+        style={({ isActive }) => ({ ...s.navItem, ...(isActive ? s.navItemAtivo : {}) })}
+      >
+        <span style={s.navIcone}>{item.icon}</span>
+        <span style={s.navTexto}>{item.label}</span>
+      </NavLink>
+    )
+  }
 
   return (
     <div style={s.container}>
@@ -62,46 +106,23 @@ export default function AppLayout({ children }) {
           </span>
         </div>
 
-        {/* Navegação */}
+        {/* Navegação principal */}
         <nav style={s.nav}>
           <p style={s.navLabel}>Menu</p>
-          {MENU.map(item => {
-            const bloqueado = item.planoMinimo && !temAcesso(item.planoMinimo)
-            if (bloqueado) {
-              return (
-                <button
-                  key={item.path}
-                  onClick={() => navigate('/#precos')}
-                  style={s.navItemBloqueado}
-                  title={`Disponível no plano ${PLANO_LABEL[item.planoMinimo]}`}
-                >
-                  <span style={s.navIcone}>{item.icon}</span>
-                  <span style={s.navTexto}>{item.label}</span>
-                  <span style={s.lockWrap}>{ICONS.lock}</span>
-                </button>
-              )
-            }
-            return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                style={({ isActive }) => ({
-                  ...s.navItem,
-                  ...(isActive ? s.navItemAtivo : {}),
-                })}
-              >
-                <span style={s.navIcone}>{item.icon}</span>
-                <span style={s.navTexto}>{item.label}</span>
-              </NavLink>
-            )
-          })}
+          {MENU.map(renderItem)}
+        </nav>
+
+        {/* Navegação inferior */}
+        <nav style={{ ...s.nav, borderTop: '1px solid #1e293b', paddingTop: '16px', flex: 0 }}>
+          <p style={s.navLabel}>Conta</p>
+          {MENU_INFERIOR.map(renderItem)}
         </nav>
 
         {/* Upgrade banner para free */}
         {plano === 'free' && (
           <div style={s.upgradeBanner}>
             <p style={s.upgradeTexto}>Desbloqueie o plano <strong>Pro</strong> e automatize tudo.</p>
-            <button onClick={() => navigate('/#precos')} style={s.upgradeBotao}>
+            <button onClick={() => navigate('/app/planos')} style={s.upgradeBotao}>
               Ver planos →
             </button>
           </div>
@@ -128,17 +149,14 @@ export default function AppLayout({ children }) {
 const s = {
   container:        { display: 'flex', minHeight: '100vh', background: '#0b0f1a', fontFamily: 'system-ui, sans-serif' },
 
-  // Sidebar
   sidebar:          { width: '240px', minHeight: '100vh', background: '#0f1117', borderRight: '1px solid #1e293b', display: 'flex', flexDirection: 'column', flexShrink: 0 },
 
-  // Logo
   logoWrap:         { padding: '20px 20px 16px', borderBottom: '1px solid #1e293b', display: 'flex', flexDirection: 'column', gap: '10px' },
   logoMarca:        { display: 'flex', alignItems: 'center', gap: '10px' },
   logoIcone:        { width: '28px', height: '28px', background: 'linear-gradient(135deg, #6366f1, #818cf8)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '800', fontSize: '14px', flexShrink: 0 },
   logoTexto:        { color: '#f1f5f9', fontSize: '16px', fontWeight: '700', letterSpacing: '-0.3px' },
   planoBadge:       { alignSelf: 'flex-start', fontSize: '10px', fontWeight: '700', padding: '3px 10px', borderRadius: '100px', textTransform: 'uppercase', letterSpacing: '0.8px' },
 
-  // Nav
   nav:              { flex: 1, padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: '2px' },
   navLabel:         { color: '#374151', fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.2px', padding: '0 8px', marginBottom: '6px' },
   navItem:          { display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 12px', color: '#64748b', textDecoration: 'none', fontSize: '14px', borderRadius: '8px', transition: 'all 0.15s', fontWeight: '500' },
@@ -148,18 +166,15 @@ const s = {
   navTexto:         { flex: 1 },
   lockWrap:         { color: '#374151', display: 'flex' },
 
-  // Upgrade banner
   upgradeBanner:    { margin: '0 12px 12px', background: 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(129,140,248,0.08))', border: '1px solid rgba(99,102,241,0.25)', borderRadius: '12px', padding: '16px' },
   upgradeTexto:     { color: '#94a3b8', fontSize: '12px', lineHeight: 1.5, marginBottom: '10px' },
   upgradeBotao:     { background: '#6366f1', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 14px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', width: '100%', fontFamily: 'inherit' },
 
-  // Usuário
   userWrap:         { padding: '14px 16px', borderTop: '1px solid #1e293b', display: 'flex', alignItems: 'center', gap: '10px' },
   userAvatar:       { width: '32px', height: '32px', background: '#1e293b', border: '1px solid #374151', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '13px', fontWeight: '700', flexShrink: 0 },
   userInfo:         { flex: 1, minWidth: 0 },
   userEmail:        { color: '#64748b', fontSize: '11px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '2px' },
   sairLink:         { background: 'none', border: 'none', color: '#475569', fontSize: '11px', cursor: 'pointer', padding: 0, fontFamily: 'inherit' },
 
-  // Main
   main:             { flex: 1, padding: '36px 40px', overflowY: 'auto', minWidth: 0 },
 }

@@ -3,13 +3,16 @@ import { AuthProvider } from './contexts/AuthContext'
 import RotaProtegida from './components/RotaProtegida'
 import AppLayout from './components/layouts/AppLayout'
 
-import Landing  from './pages/public/Landing'
-import Login    from './pages/public/Login'
-import Cadastro from './pages/public/Cadastro'
+import Landing       from './pages/public/Landing'
+import Login         from './pages/public/Login'
+import Cadastro      from './pages/public/Cadastro'
 
-import Dashboard from './pages/app/Dashboard'
-import Ofertas   from './pages/app/Ofertas'
-import Keywords  from './pages/app/Keywords'
+import Dashboard     from './pages/app/Dashboard'
+import Ofertas       from './pages/app/Ofertas'
+import Keywords      from './pages/app/Keywords'
+import Planos        from './pages/app/Planos'
+import Configuracoes from './pages/app/Configuracoes'
+import Tutorial      from './pages/app/Tutorial'
 
 export default function App() {
   return (
@@ -25,10 +28,13 @@ export default function App() {
           <RotaProtegida>
             <AppLayout>
               <Routes>
-                <Route index element={<Navigate to="dashboard" replace />} />
-                <Route path="dashboard" element={<Dashboard />} />
-                <Route path="ofertas"   element={<Ofertas />} />
-                <Route path="keywords"  element={<Keywords />} />
+                <Route index                  element={<Navigate to="dashboard" replace />} />
+                <Route path="dashboard"       element={<Dashboard />} />
+                <Route path="ofertas"         element={<Ofertas />} />
+                <Route path="keywords"        element={<Keywords />} />
+                <Route path="planos"          element={<Planos />} />
+                <Route path="configuracoes"   element={<Configuracoes />} />
+                <Route path="tutorial"        element={<Tutorial />} />
               </Routes>
             </AppLayout>
           </RotaProtegida>

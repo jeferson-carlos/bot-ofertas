@@ -133,7 +133,7 @@ export default function Dashboard() {
                 </div>
               </button>
             ) : (
-              <button onClick={() => navigate('/#precos')} style={{ ...s.acaoItem, opacity: 0.6 }}>
+              <button onClick={() => navigate('/app/planos')} style={{ ...s.acaoItem, opacity: 0.6 }}>
                 <div style={{ ...s.acaoIconeWrap, background: 'rgba(99,102,241,0.1)' }}>
                   <span>🔒</span>
                 </div>

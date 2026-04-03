@@ -1,9 +1,10 @@
 import { createClient } from "jsr:@supabase/supabase-js@2"
 
-const SHOPEE_APP_ID = Deno.env.get("SHOPEE_APP_ID")!
-const SHOPEE_SECRET = Deno.env.get("SHOPEE_SECRET")!
-const BASE_URL      = "https://open-api.affiliate.shopee.com.br/graphql"
-const DESCONTO_MIN  = 10
+// Credenciais globais (fallback quando usuário não configurou as próprias)
+const SHOPEE_APP_ID_GLOBAL = Deno.env.get("SHOPEE_APP_ID") ?? ""
+const SHOPEE_SECRET_GLOBAL = Deno.env.get("SHOPEE_SECRET") ?? ""
+const BASE_URL             = "https://open-api.affiliate.shopee.com.br/graphql"
+const DESCONTO_MIN         = 10
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -16,12 +17,12 @@ async function sha256hex(text: string): Promise<string> {
   return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, "0")).join("")
 }
 
-async function getHeaders(payload: string) {
+async function getHeaders(appId: string, secret: string, payload: string) {
   const timestamp  = String(Math.floor(Date.now() / 1000))
-  const assinatura = await sha256hex(`${SHOPEE_APP_ID}${timestamp}${payload}${SHOPEE_SECRET}`)
+  const assinatura = await sha256hex(`${appId}${timestamp}${payload}${secret}`)
   return {
     "Content-Type": "application/json",
-    "Authorization": `SHA256 Credential=${SHOPEE_APP_ID}, Timestamp=${timestamp}, Signature=${assinatura}`
+    "Authorization": `SHA256 Credential=${appId}, Timestamp=${timestamp}, Signature=${assinatura}`
   }
 }
 
@@ -32,7 +33,12 @@ function calcularDesconto(precoMax: string, precoMin: string): number {
   return 0
 }
 
-async function buscarPorKeyword(keyword: string, sortType: number): Promise<any[]> {
+async function buscarPorKeyword(
+  keyword: string,
+  sortType: number,
+  appId: string,
+  secret: string
+): Promise<any[]> {
   const payload = JSON.stringify({
     query: `{
       productOfferV2(
@@ -52,7 +58,7 @@ async function buscarPorKeyword(keyword: string, sortType: number): Promise<any[
     }`
   })
 
-  const res  = await fetch(BASE_URL, { method: "POST", headers: await getHeaders(payload), body: payload })
+  const res  = await fetch(BASE_URL, { method: "POST", headers: await getHeaders(appId, secret, payload), body: payload })
   const data = await res.json()
 
   if (data.errors) {
@@ -61,26 +67,23 @@ async function buscarPorKeyword(keyword: string, sortType: number): Promise<any[
   }
 
   const nodes = data?.data?.productOfferV2?.nodes ?? []
-
-  // Filtra por desconto CALCULADO — não confia no campo priceDiscountRate
   return nodes.filter((n: any) => calcularDesconto(n.priceMax, n.priceMin) >= DESCONTO_MIN)
 }
 
-async function salvarOfertas(ofertas: any[]): Promise<{ novos: number; duplicatas: number }> {
+async function salvarOfertas(ofertas: any[], userId: string | null): Promise<{ novos: number; duplicatas: number }> {
   let novos = 0, duplicatas = 0
 
   for (const oferta of ofertas) {
     const produto_id = String(oferta.itemId)
 
-    const { data: existente } = await supabase
-      .from("ofertas")
-      .select("id")
-      .eq("product_id", produto_id)
-      .single()
+    // Verifica duplicata por produto_id + user_id
+    let query = supabase.from("ofertas").select("id").eq("product_id", produto_id)
+    if (userId) query = query.eq("user_id", userId)
 
+    const { data: existente } = await query.single()
     if (existente) { duplicatas++; continue }
 
-    await supabase.from("ofertas").insert({
+    const registro: any = {
       product_id:          produto_id,
       titulo:              oferta.productName,
       preco_original:      parseFloat(oferta.priceMax),
@@ -90,8 +93,11 @@ async function salvarOfertas(ofertas: any[]): Promise<{ novos: number; duplicata
       link_afiliado:       oferta.offerLink,
       imagem_url:          oferta.imageUrl,
       loja:                oferta.shopName,
-      status:              "pendente"
-    })
+      status:              "pendente",
+    }
+    if (userId) registro.user_id = userId
+
+    await supabase.from("ofertas").insert(registro)
     novos++
   }
 
@@ -110,7 +116,6 @@ async function verificarEIncrementarUso(userId: string, plano: string): Promise<
   const limite = LIMITE_BUSCA[plano as keyof typeof LIMITE_BUSCA] ?? 0
   const hoje   = new Date().toISOString().split("T")[0]
 
-  // Busca uso de hoje
   const { data } = await supabase
     .from("uso_busca")
     .select("quantidade")
@@ -124,7 +129,6 @@ async function verificarEIncrementarUso(userId: string, plano: string): Promise<
     return { permitido: false, usado, limite }
   }
 
-  // Incrementa (upsert)
   await supabase.from("uso_busca").upsert(
     { user_id: userId, data: hoje, quantidade: usado + 1 },
     { onConflict: "user_id,data" }
@@ -133,18 +137,47 @@ async function verificarEIncrementarUso(userId: string, plano: string): Promise<
   return { permitido: true, usado: usado + 1, limite }
 }
 
+// Processa um único usuário: busca suas keywords usando suas credenciais
+async function processarUsuario(userId: string, appId: string, secret: string): Promise<{ novos: number; duplicatas: number }> {
+  const { data: keywords } = await supabase
+    .from("keywords")
+    .select("keyword, sort_type")
+    .eq("user_id", userId)
+    .eq("ativo", true)
+
+  const lista = keywords && keywords.length > 0
+    ? keywords
+    : [{ keyword: "oferta", sort_type: 2 }]
+
+  const unique = Object.values(
+    lista.reduce((acc: any, k: any) => ({ ...acc, [k.keyword]: k }), {})
+  ) as { keyword: string; sort_type: number }[]
+
+  let totalNovos = 0, totalDuplicatas = 0
+
+  for (const { keyword, sort_type } of unique) {
+    const ofertas = await buscarPorKeyword(keyword, sort_type ?? 2, appId, secret)
+    const { novos, duplicatas } = await salvarOfertas(ofertas, userId)
+    totalNovos      += novos
+    totalDuplicatas += duplicatas
+    console.log(`  [${userId}] "${keyword}": ${novos} novos, ${duplicatas} duplicatas`)
+  }
+
+  return { novos: totalNovos, duplicatas: totalDuplicatas }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS })
 
   try {
     const body   = await req.json().catch(() => ({}))
-    const userId = body?.user_id
+    const userId = body?.user_id as string | undefined
 
-    // Verificação de limite apenas para chamadas manuais (com user_id)
+    // ─── Chamada manual (painel) — user_id fornecido ───────────────────────
     if (userId) {
       const { data: perfil } = await supabase
         .from("profiles")
-        .select("plan")
+        .select("plan, shopee_app_id, shopee_secret")
         .eq("id", userId)
         .single()
 
@@ -157,42 +190,74 @@ Deno.serve(async (req) => {
           { status: 429, headers: { ...CORS, "Content-Type": "application/json" } }
         )
       }
+
+      const appId  = perfil?.shopee_app_id  || SHOPEE_APP_ID_GLOBAL
+      const secret = perfil?.shopee_secret   || SHOPEE_SECRET_GLOBAL
+
+      if (!appId || !secret) {
+        return Response.json(
+          { ok: false, erro: "Credenciais Shopee não configuradas. Acesse Configurações para adicionar." },
+          { status: 400, headers: { ...CORS, "Content-Type": "application/json" } }
+        )
+      }
+
+      const { novos, duplicatas } = await processarUsuario(userId, appId, secret)
+
+      return Response.json(
+        { ok: true, novos, duplicatas },
+        { headers: { ...CORS, "Content-Type": "application/json" } }
+      )
     }
 
-    let query = supabase.from("keywords").select("keyword, sort_type").eq("ativo", true)
-    if (userId) query = query.eq("user_id", userId)
+    // ─── Chamada de cron (sem user_id) — processa todos os usuários ────────
+    console.log("🕐 Cron: processando todos os usuários com credenciais configuradas...")
 
-    const { data: keywords, error } = await query
-    if (error) throw new Error("Erro ao buscar keywords: " + error.message)
-
-    // Fallback: sem keywords, usa "oferta" com mais vendidos
-    const lista = keywords && keywords.length > 0
-      ? keywords
-      : [{ keyword: "oferta", sort_type: 2 }]
-
-    // Deduplica keywords repetidas (mantém a última configuração)
-    const unique = Object.values(
-      lista.reduce((acc: any, k: any) => ({ ...acc, [k.keyword]: k }), {})
-    ) as { keyword: string; sort_type: number }[]
-
-    console.log(`🔍 Buscando ${unique.length} keyword(s)`)
+    const { data: usuarios } = await supabase
+      .from("profiles")
+      .select("id, shopee_app_id, shopee_secret")
+      .not("shopee_app_id", "is", null)
+      .not("shopee_secret", "is", null)
 
     let totalNovos = 0, totalDuplicatas = 0
 
-    for (const { keyword, sort_type } of unique) {
-      const sortType = sort_type ?? 2
-      const ofertas  = await buscarPorKeyword(keyword, sortType)
-      const { novos, duplicatas } = await salvarOfertas(ofertas)
-      totalNovos      += novos
-      totalDuplicatas += duplicatas
-      console.log(`  "${keyword}" (sort=${sortType}): ${novos} novos, ${duplicatas} duplicatas`)
+    if (usuarios && usuarios.length > 0) {
+      // Processa usuários com credenciais próprias
+      for (const u of usuarios) {
+        console.log(`👤 Processando usuário ${u.id}`)
+        const { novos, duplicatas } = await processarUsuario(u.id, u.shopee_app_id, u.shopee_secret)
+        totalNovos      += novos
+        totalDuplicatas += duplicatas
+      }
+    } else {
+      // Fallback: usa credenciais globais sem user_id (comportamento legado)
+      console.log("⚠️  Nenhum usuário com credenciais — usando credenciais globais")
+      if (SHOPEE_APP_ID_GLOBAL && SHOPEE_SECRET_GLOBAL) {
+        const { data: keywords } = await supabase
+          .from("keywords")
+          .select("keyword, sort_type")
+          .eq("ativo", true)
+
+        const lista = keywords && keywords.length > 0
+          ? keywords
+          : [{ keyword: "oferta", sort_type: 2 }]
+
+        const unique = Object.values(
+          lista.reduce((acc: any, k: any) => ({ ...acc, [k.keyword]: k }), {})
+        ) as { keyword: string; sort_type: number }[]
+
+        for (const { keyword, sort_type } of unique) {
+          const ofertas = await buscarPorKeyword(keyword, sort_type ?? 2, SHOPEE_APP_ID_GLOBAL, SHOPEE_SECRET_GLOBAL)
+          const { novos, duplicatas } = await salvarOfertas(ofertas, null)
+          totalNovos      += novos
+          totalDuplicatas += duplicatas
+        }
+      }
     }
 
     return Response.json(
-      { ok: true, novos: totalNovos, duplicatas: totalDuplicatas, keywords: unique.length },
+      { ok: true, novos: totalNovos, duplicatas: totalDuplicatas, usuarios: usuarios?.length ?? 0 },
       { headers: { ...CORS, "Content-Type": "application/json" } }
     )
-
 
   } catch (e) {
     console.error("Erro:", e)
