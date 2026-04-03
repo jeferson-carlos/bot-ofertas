@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { supabase } from '../../supabaseClient'
+import { useAuth } from '../../contexts/AuthContext'
 
 const FUNCTION_URL = import.meta.env.VITE_FUNCTION_URL
 const PAGE_SIZE = 20
@@ -20,6 +21,9 @@ function badgeDesconto(pct) {
 
 export default function Ofertas() {
   const location = useLocation()
+  const { profile } = useAuth()
+  const plano = profile?.plan || 'free'
+
   const [ofertas, setOfertas]         = useState([])
   const [filtro, setFiltro]           = useState(location.state?.filtro || 'pendente')
   const [loading, setLoading]         = useState(true)
@@ -27,6 +31,7 @@ export default function Ofertas() {
   const [acao, setAcao]               = useState(null)
   const [pagina, setPagina]           = useState(0)
   const [temMais, setTemMais]         = useState(false)
+  const [copiado, setCopiado]         = useState(null)
 
   async function carregarOfertas(novaPagina = 0, append = false) {
     if (append) setLoadingMais(true)
@@ -81,6 +86,23 @@ export default function Ofertas() {
     })
     await carregarOfertas(0)
     setAcao(null)
+  }
+
+  async function copiar(oferta) {
+    const original  = parseFloat(oferta.preco_original).toFixed(2)
+    const desconto  = parseFloat(oferta.preco_desconto).toFixed(2)
+    const pct       = oferta.percentual_desconto
+    const texto =
+      `🔥 OFERTA SHOPEE\n\n` +
+      `📦 ${oferta.titulo}\n\n` +
+      `🏪 Loja: ${oferta.loja || 'Shopee'}\n` +
+      `💰 De: R$ ${original}\n` +
+      `✅ Por: R$ ${desconto}\n` +
+      `📉 Desconto: ${pct}% OFF\n\n` +
+      `🛒 Comprar agora: ${oferta.link_afiliado}`
+    await navigator.clipboard.writeText(texto)
+    setCopiado(oferta.id)
+    setTimeout(() => setCopiado(null), 2000)
   }
 
   const cfg = STATUS_CONFIG[filtro]
@@ -177,21 +199,43 @@ export default function Ofertas() {
                 <div style={s.rodape}>
                   {filtro === 'pendente' ? (
                     <div style={s.acoes}>
-                      <button onClick={() => enviar(oferta.id)} disabled={emAcao} style={s.botaoEnviar}>
-                        {emAcao ? '...' : (
-                          <>
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '5px' }}>
-                              <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                      {plano === 'free' ? (
+                        <button onClick={() => copiar(oferta)} style={s.botaoCopiar}>
+                          {copiado === oferta.id ? (
+                            <>
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '5px' }}>
+                                <polyline points="20 6 9 17 4 12"/>
+                              </svg>
+                              Copiado!
+                            </>
+                          ) : (
+                            <>
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '5px' }}>
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                              </svg>
+                              Copiar mensagem
+                            </>
+                          )}
+                        </button>
+                      ) : (
+                        <>
+                          <button onClick={() => enviar(oferta.id)} disabled={emAcao} style={s.botaoEnviar}>
+                            {emAcao ? '...' : (
+                              <>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '5px' }}>
+                                  <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                                </svg>
+                                Enviar
+                              </>
+                            )}
+                          </button>
+                          <button onClick={() => descartar(oferta.id)} disabled={emAcao} style={s.botaoDescartar}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
                             </svg>
-                            Enviar
-                          </>
-                        )}
-                      </button>
-                      <button onClick={() => descartar(oferta.id)} disabled={emAcao} style={s.botaoDescartar}>
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
-                        </svg>
-                      </button>
+                          </button>
+                        </>
+                      )}
                     </div>
                   ) : (
                     <div style={{ flex: 1 }} />
@@ -261,6 +305,7 @@ const s = {
   rodape:         { display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px 12px' },
   acoes:          { display: 'flex', gap: '6px', flex: 1 },
   botaoEnviar:    { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', background: '#6366f1', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '12px', fontFamily: 'inherit' },
+  botaoCopiar:    { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', background: '#0f1117', color: '#22c55e', border: '1px solid #22c55e44', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '12px', fontFamily: 'inherit' },
   botaoDescartar: { display: 'flex', alignItems: 'center', justifyContent: 'center', width: '34px', height: '34px', background: '#0f1117', color: '#475569', border: '1px solid #1e293b', borderRadius: '8px', cursor: 'pointer', flexShrink: 0 },
   linkVer:        { color: '#6366f1', fontSize: '12px', fontWeight: '600', flexShrink: 0, textDecoration: 'none' },
 

@@ -113,7 +113,7 @@ export default function AppLayout({ children }) {
         </nav>
 
         {/* Navegação inferior */}
-        <nav style={{ ...s.nav, borderTop: '1px solid #1e293b', paddingTop: '16px', flex: 0 }}>
+        <nav style={{ ...s.nav, borderTop: '1px solid #1e293b', paddingTop: '16px', flex: 'none' }}>
           <p style={s.navLabel}>Conta</p>
           {MENU_INFERIOR.map(renderItem)}
         </nav>
@@ -149,7 +149,7 @@ export default function AppLayout({ children }) {
 const s = {
   container:        { display: 'flex', minHeight: '100vh', background: '#0b0f1a', fontFamily: 'system-ui, sans-serif' },
 
-  sidebar:          { width: '240px', minHeight: '100vh', background: '#0f1117', borderRight: '1px solid #1e293b', display: 'flex', flexDirection: 'column', flexShrink: 0 },
+  sidebar:          { width: '240px', height: '100vh', position: 'sticky', top: 0, background: '#0f1117', borderRight: '1px solid #1e293b', display: 'flex', flexDirection: 'column', flexShrink: 0, overflowY: 'auto' },
 
   logoWrap:         { padding: '20px 20px 16px', borderBottom: '1px solid #1e293b', display: 'flex', flexDirection: 'column', gap: '10px' },
   logoMarca:        { display: 'flex', alignItems: 'center', gap: '10px' },
