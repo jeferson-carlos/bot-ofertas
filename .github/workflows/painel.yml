@@ -1,0 +1,40 @@
+name: Deploy Painel Web
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'painel/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependências
+        run: |
+          cd painel
+          npm install
+
+      - name: Build e Deploy
+        env:
+          VITE_SUPABASE_URL:  ${{ secrets.SUPABASE_URL }}
+          VITE_SUPABASE_KEY:  ${{ secrets.SUPABASE_KEY }}
+          VITE_API_URL:       ${{ secrets.API_URL }}
+        run: |
+          cd painel
+          npm run build
+
+      - name: Deploy para GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: painel/dist

@@ -2,6 +2,8 @@ import { useEffect, useState } from "react"
 import { supabase } from "./supabaseClient"
 
 const API_URL = import.meta.env.VITE_API_URL
+const FUNCTION_URL = "https://dkyvmwhbriomarhodhgz.supabase.co/functions/v1/enviar-oferta"
+
 
 const STATUS_LABELS = {
   pendente:   { label: "Pendentes",   cor: "#f59e0b" },
@@ -29,26 +31,26 @@ export default function App() {
   useEffect(() => { carregarOfertas() }, [filtro])
 
   async function enviar(id) {
-    setAcao(id)
-    await fetch(`${API_URL}/enviar`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id })
-    })
-    await carregarOfertas()
-    setAcao(null)
-  }
+  setAcao(id)
+  await fetch(FUNCTION_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, acao: "enviar" })
+  })
+  await carregarOfertas()
+  setAcao(null)
+}
 
   async function descartar(id) {
-    setAcao(id)
-    await fetch(`${API_URL}/descartar`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id })
-    })
-    await carregarOfertas()
-    setAcao(null)
-  }
+  setAcao(id)
+  await fetch(FUNCTION_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, acao: "descartar" })
+  })
+  await carregarOfertas()
+  setAcao(null)
+}
 
   return (
     <div style={styles.container}>
