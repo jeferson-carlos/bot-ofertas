@@ -22,15 +22,22 @@ export default function App() {
   const [acao, setAcao]         = useState(null) // id da oferta em ação
 
   async function carregarOfertas() {
-    setLoading(true)
-    const { data } = await supabase
-      .from("ofertas")
-      .select("*")
-      .eq("status", filtro)
-      .order("criado_em", { ascending: false })
-    setOfertas(data || [])
-    setLoading(false)
-  }
+  setLoading(true)
+  console.log("Carregando ofertas com filtro:", filtro)
+  
+  const { data, error } = await supabase
+    .from("ofertas")
+    .select("*")
+    .eq("status", filtro)
+    .order("criado_em", { ascending: false })
+
+  console.log("Data:", data)
+  console.log("Error:", error)
+  console.log("Total:", data?.length)
+
+  setOfertas(data || [])
+  setLoading(false)
+}
 
   useEffect(() => { carregarOfertas() }, [filtro])
 
