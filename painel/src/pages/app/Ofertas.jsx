@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { supabase } from '../../supabaseClient'
 
 const FUNCTION_URL = import.meta.env.VITE_FUNCTION_URL
@@ -10,8 +11,9 @@ const STATUS_LABELS = {
 }
 
 export default function Ofertas() {
+  const location = useLocation()
   const [ofertas, setOfertas] = useState([])
-  const [filtro, setFiltro]   = useState('pendente')
+  const [filtro, setFiltro]   = useState(location.state?.filtro || 'pendente')
   const [loading, setLoading] = useState(true)
   const [acao, setAcao]       = useState(null)
 

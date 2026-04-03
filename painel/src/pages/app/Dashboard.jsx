@@ -44,26 +44,23 @@ export default function Dashboard() {
 
       {/* Stats */}
       <div style={styles.statsGrid}>
-        <div style={styles.statCard}>
-          <p style={styles.statValor}>{stats.pendente}</p>
-          <p style={styles.statLabel}>Pendentes</p>
-          <div style={{ ...styles.statBarra, background: '#f59e0b' }} />
-        </div>
-        <div style={styles.statCard}>
-          <p style={styles.statValor}>{stats.enviado}</p>
-          <p style={styles.statLabel}>Enviadas</p>
-          <div style={{ ...styles.statBarra, background: '#10b981' }} />
-        </div>
-        <div style={styles.statCard}>
-          <p style={styles.statValor}>{stats.descartado}</p>
-          <p style={styles.statLabel}>Descartadas</p>
-          <div style={{ ...styles.statBarra, background: '#ef4444' }} />
-        </div>
-        <div style={styles.statCard}>
-          <p style={styles.statValor}>{stats.pendente + stats.enviado + stats.descartado}</p>
-          <p style={styles.statLabel}>Total coletadas</p>
-          <div style={{ ...styles.statBarra, background: '#6366f1' }} />
-        </div>
+        {[
+          { status: 'pendente',  label: 'Pendentes',      valor: stats.pendente,  cor: '#f59e0b' },
+          { status: 'enviado',   label: 'Enviadas',       valor: stats.enviado,   cor: '#10b981' },
+          { status: 'descartado',label: 'Descartadas',    valor: stats.descartado,cor: '#ef4444' },
+          { status: null,        label: 'Total coletadas', valor: stats.pendente + stats.enviado + stats.descartado, cor: '#6366f1' },
+        ].map(({ status, label, valor, cor }) => (
+          <div
+            key={label}
+            onClick={() => status && navigate('/app/ofertas', { state: { filtro: status } })}
+            style={{ ...styles.statCard, ...(status ? styles.statCardClicavel : {}) }}
+          >
+            <p style={styles.statValor}>{valor}</p>
+            <p style={styles.statLabel}>{label}</p>
+            {status && <p style={{ ...styles.statDica, color: cor }}>Ver lista →</p>}
+            <div style={{ ...styles.statBarra, background: cor }} />
+          </div>
+        ))}
       </div>
 
       {/* Ações rápidas */}
@@ -99,6 +96,8 @@ const styles = {
   planoBadge:        { color: '#fff', fontSize: '12px', fontWeight: 'bold', padding: '4px 12px', borderRadius: '12px' },
   statsGrid:         { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '16px', marginBottom: '40px' },
   statCard:          { background: '#1e293b', borderRadius: '12px', padding: '20px', position: 'relative', overflow: 'hidden' },
+  statCardClicavel:  { cursor: 'pointer', transition: 'transform 0.15s, border-color 0.15s', border: '1px solid #374151' },
+  statDica:          { fontSize: '11px', margin: '4px 0 0', fontWeight: 'bold' },
   statValor:         { color: '#e2e8f0', fontSize: '32px', fontWeight: 'bold', margin: '0 0 4px' },
   statLabel:         { color: '#6b7280', fontSize: '13px', margin: 0 },
   statBarra:         { position: 'absolute', bottom: 0, left: 0, right: 0, height: '3px' },
