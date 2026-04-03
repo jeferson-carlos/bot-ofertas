@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom'
 import { supabase } from '../../supabaseClient'
 
 const FUNCTION_URL = import.meta.env.VITE_FUNCTION_URL
+const PAGE_SIZE = 20
 
 const STATUS_LABELS = {
   pendente:   { label: 'Pendentes',   cor: '#f59e0b' },
@@ -12,23 +13,42 @@ const STATUS_LABELS = {
 
 export default function Ofertas() {
   const location = useLocation()
-  const [ofertas, setOfertas] = useState([])
-  const [filtro, setFiltro]   = useState(location.state?.filtro || 'pendente')
-  const [loading, setLoading] = useState(true)
-  const [acao, setAcao]       = useState(null)
+  const [ofertas, setOfertas]       = useState([])
+  const [filtro, setFiltro]         = useState(location.state?.filtro || 'pendente')
+  const [loading, setLoading]       = useState(true)
+  const [loadingMais, setLoadingMais] = useState(false)
+  const [acao, setAcao]             = useState(null)
+  const [pagina, setPagina]         = useState(0)
+  const [temMais, setTemMais]       = useState(false)
 
-  async function carregarOfertas() {
-    setLoading(true)
+  async function carregarOfertas(novaPagina = 0, append = false) {
+    if (append) setLoadingMais(true)
+    else setLoading(true)
+
+    const from = novaPagina * PAGE_SIZE
+    const to   = from + PAGE_SIZE - 1
+
     const { data } = await supabase
       .from('ofertas')
       .select('*')
       .eq('status', filtro)
       .order('criado_em', { ascending: false })
-    setOfertas(data || [])
-    setLoading(false)
+      .range(from, to)
+
+    const resultado = data || []
+    setOfertas(prev => append ? [...prev, ...resultado] : resultado)
+    setTemMais(resultado.length === PAGE_SIZE)
+    setPagina(novaPagina)
+
+    if (append) setLoadingMais(false)
+    else setLoading(false)
   }
 
-  useEffect(() => { carregarOfertas() }, [filtro])
+  function carregarMais() {
+    carregarOfertas(pagina + 1, true)
+  }
+
+  useEffect(() => { carregarOfertas(0) }, [filtro])
 
   async function enviar(id) {
     setAcao(id)
@@ -40,7 +60,7 @@ export default function Ofertas() {
       },
       body: JSON.stringify({ id, acao: 'enviar' })
     })
-    await carregarOfertas()
+    await carregarOfertas(0)
     setAcao(null)
   }
 
@@ -54,7 +74,7 @@ export default function Ofertas() {
       },
       body: JSON.stringify({ id, acao: 'descartar' })
     })
-    await carregarOfertas()
+    await carregarOfertas(0)
     setAcao(null)
   }
 
@@ -62,7 +82,7 @@ export default function Ofertas() {
     <div>
       <div style={styles.header}>
         <h1 style={styles.titulo}>Ofertas</h1>
-        <button onClick={carregarOfertas} style={styles.recarregar}>🔄 Atualizar</button>
+        <button onClick={() => carregarOfertas(0)} style={styles.recarregar}>🔄 Atualizar</button>
       </div>
 
       {/* Filtros */}
@@ -138,6 +158,15 @@ export default function Ofertas() {
           ))}
         </div>
       )}
+
+      {/* Carregar mais */}
+      {temMais && !loading && (
+        <div style={{ textAlign: 'center', marginTop: '24px' }}>
+          <button onClick={carregarMais} disabled={loadingMais} style={styles.botaoMais}>
+            {loadingMais ? 'Carregando...' : `Carregar mais`}
+          </button>
+        </div>
+      )}
     </div>
   )
 }
@@ -164,4 +193,5 @@ const styles = {
   botaoEnviar:    { flex: 1, padding: '10px', background: '#6366f1', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' },
   botaoDescartar: { flex: 1, padding: '10px', background: '#374151', color: '#9ca3af', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '13px' },
   link:           { textAlign: 'center', color: '#6366f1', fontSize: '12px', padding: '10px', textDecoration: 'none' },
+  botaoMais:      { background: 'transparent', border: '1px solid #374151', color: '#9ca3af', borderRadius: '8px', padding: '12px 32px', cursor: 'pointer', fontSize: '14px' },
 }

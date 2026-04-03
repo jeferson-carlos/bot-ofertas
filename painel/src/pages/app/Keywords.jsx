@@ -5,7 +5,8 @@ import FeatureBloqueada from '../../components/FeatureBloqueada'
 
 const BUSCAR_URL = import.meta.env.VITE_SUPABASE_URL + '/functions/v1/buscar-ofertas'
 
-const LIMITE_PLAN = { free: 0, pro: 3, premium: Infinity }
+const LIMITE_PLAN       = { free: 0, pro: 3, premium: Infinity }
+const LIMITE_BUSCA_DIA  = { free: 0, pro: 5, premium: Infinity }
 
 const SORT_OPTIONS = [
   { value: 2, label: 'Mais vendidos' },
@@ -26,10 +27,29 @@ export default function Keywords() {
   const [resultado, setResultado]   = useState(null)
   const [erro, setErro]             = useState('')
 
-  const plano  = profile?.plan || 'free'
-  const limite = LIMITE_PLAN[plano] ?? 0
+  const plano       = profile?.plan || 'free'
+  const limite      = LIMITE_PLAN[plano] ?? 0
+  const limiteBusca = LIMITE_BUSCA_DIA[plano] ?? 0
 
-  useEffect(() => { if (temAcesso('pro')) carregarKeywords() }, [])
+  const [usoBusca, setUsoBusca] = useState(0)
+
+  useEffect(() => {
+    if (temAcesso('pro')) {
+      carregarKeywords()
+      carregarUso()
+    }
+  }, [])
+
+  async function carregarUso() {
+    const hoje = new Date().toISOString().split('T')[0]
+    const { data } = await supabase
+      .from('uso_busca')
+      .select('quantidade')
+      .eq('user_id', user.id)
+      .eq('data', hoje)
+      .single()
+    setUsoBusca(data?.quantidade ?? 0)
+  }
 
   async function carregarKeywords() {
     setLoading(true)
@@ -86,6 +106,7 @@ export default function Keywords() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.erro || 'Erro desconhecido')
       setResultado(data)
+      carregarUso()
     } catch (e) {
       setErro(e.message)
     }
@@ -121,16 +142,21 @@ export default function Keywords() {
             {keywords.length}/{limite === Infinity ? '∞' : limite} keywords — busca automática a cada hora
           </p>
         </div>
-        <button
-          onClick={buscarAgora}
-          disabled={buscando || keywords.filter(k => k.ativo).length === 0}
-          style={{
-            ...styles.botaoBuscar,
-            opacity: (buscando || keywords.filter(k => k.ativo).length === 0) ? 0.5 : 1
-          }}
-        >
-          {buscando ? '⏳ Buscando...' : '⚡ Buscar agora'}
-        </button>
+        <div style={{ textAlign: 'right' }}>
+          <button
+            onClick={buscarAgora}
+            disabled={buscando || keywords.filter(k => k.ativo).length === 0 || usoBusca >= limiteBusca}
+            style={{
+              ...styles.botaoBuscar,
+              opacity: (buscando || keywords.filter(k => k.ativo).length === 0 || usoBusca >= limiteBusca) ? 0.5 : 1
+            }}
+          >
+            {buscando ? '⏳ Buscando...' : '⚡ Buscar agora'}
+          </button>
+          <p style={styles.contadorBusca}>
+            {usoBusca}/{limiteBusca === Infinity ? '∞' : limiteBusca} buscas hoje
+          </p>
+        </div>
       </div>
 
       {/* Resultado da busca */}
@@ -211,6 +237,7 @@ const styles = {
   titulo:         { color: '#e2e8f0', fontSize: '22px', fontWeight: 'bold', margin: '0 0 4px' },
   sub:            { color: '#6b7280', fontSize: '13px', margin: 0 },
   botaoBuscar:    { background: '#6366f1', color: '#fff', border: 'none', borderRadius: '10px', padding: '12px 20px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' },
+  contadorBusca:  { color: '#6b7280', fontSize: '11px', marginTop: '6px' },
   resultado:      { background: '#052e16', border: '1px solid #10b981', color: '#10b981', borderRadius: '10px', padding: '14px 16px', marginBottom: '20px', fontSize: '14px' },
   erroBox:        { background: '#450a0a', border: '1px solid #ef4444', color: '#ef4444', borderRadius: '10px', padding: '14px 16px', marginBottom: '20px', fontSize: '14px' },
   form:           { display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' },

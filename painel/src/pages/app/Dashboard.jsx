@@ -11,19 +11,27 @@ export default function Dashboard() {
   const [stats, setStats] = useState({ pendente: 0, enviado: 0, descartado: 0 })
   const navigate = useNavigate()
 
-  useEffect(() => {
-    async function carregarStats() {
-      const { data } = await supabase
-        .from('ofertas')
-        .select('status')
-
-      if (data) {
-        const s = { pendente: 0, enviado: 0, descartado: 0 }
-        data.forEach(o => { if (s[o.status] !== undefined) s[o.status]++ })
-        setStats(s)
-      }
+  async function carregarStats() {
+    const { data } = await supabase.from('ofertas').select('status')
+    if (data) {
+      const s = { pendente: 0, enviado: 0, descartado: 0 }
+      data.forEach(o => { if (s[o.status] !== undefined) s[o.status]++ })
+      setStats(s)
     }
+  }
+
+  useEffect(() => {
     carregarStats()
+
+    // Real-time: atualiza stats quando oferta é inserida ou atualizada
+    const channel = supabase
+      .channel('ofertas-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'ofertas' }, () => {
+        carregarStats()
+      })
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
   }, [])
 
   const plano = profile?.plan || 'free'
