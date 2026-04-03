@@ -29,6 +29,7 @@ jobs:
           VITE_SUPABASE_URL:  ${{ secrets.SUPABASE_URL }}
           VITE_SUPABASE_KEY:  ${{ secrets.SUPABASE_KEY }}
           VITE_API_URL:       ${{ secrets.API_URL }}
+          VITE_FUNCTION_URL:  ${{ secrets.FUNCTION_URL }}
         run: |
           cd painel
           npm run build
