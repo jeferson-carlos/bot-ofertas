@@ -29,14 +29,33 @@ def get_headers(payload: str) -> dict:
         "Authorization": f"SHA256 Credential={APP_ID}, Timestamp={timestamp}, Signature={assinatura}"
     }
 
-def buscar_ofertas(keyword: str = "oferta", pagina: int = 1, limite: int = 50) -> list:
-    """Busca produtos na Shopee e retorna apenas os com desconto."""
+SORT_TYPES = {
+    "relevancia":   1,
+    "mais_vendidos": 2,
+    "menor_preco":  3,
+    "maior_preco":  4,
+    "comissao":     5,
+}
+
+def calcular_desconto(preco_max, preco_min) -> float:
+    """Calcula desconto real a partir dos preços, ignorando o campo priceDiscountRate."""
+    try:
+        max_val = float(preco_max or 0)
+        min_val = float(preco_min or 0)
+        if max_val > 0 and min_val < max_val:
+            return round((1 - min_val / max_val) * 100, 1)
+    except (ValueError, TypeError):
+        pass
+    return 0.0
+
+def buscar_ofertas(keyword: str = "oferta", pagina: int = 1, limite: int = 50, sort_type: int = 2) -> list:
+    """Busca produtos na Shopee e retorna apenas os com desconto real."""
     payload = json.dumps({
         "query": f"""{{
           productOfferV2(
             keyword: "{keyword}",
             listType: 1,
-            sortType: 5,
+            sortType: {sort_type},
             page: {pagina},
             limit: {limite}
           ) {{
@@ -65,10 +84,10 @@ def buscar_ofertas(keyword: str = "oferta", pagina: int = 1, limite: int = 50) -
 
     nodes = data["data"]["productOfferV2"]["nodes"]
 
-    # Filtra apenas produtos com desconto acima do mínimo
+    # Filtra por desconto CALCULADO (não confia no campo priceDiscountRate)
     ofertas = [
         n for n in nodes
-        if float(n.get("priceDiscountRate") or 0) >= DESCONTO_MINIMO
+        if calcular_desconto(n.get("priceMax"), n.get("priceMin")) >= DESCONTO_MINIMO
     ]
 
     print(f"📦 {len(nodes)} produtos recebidos → {len(ofertas)} com desconto ≥ {DESCONTO_MINIMO}%")
@@ -98,7 +117,7 @@ def salvar_ofertas(ofertas: list) -> dict:
             "titulo":               oferta["productName"],
             "preco_original":       float(oferta["priceMax"]),
             "preco_desconto":       float(oferta["priceMin"]),
-            "percentual_desconto":  int(float(oferta.get("priceDiscountRate") or 0)),
+            "percentual_desconto":  int(calcular_desconto(oferta.get("priceMax"), oferta.get("priceMin"))),
             "link_afiliado":        oferta["offerLink"],
             "imagem_url":           oferta.get("imageUrl"),
             "loja":                 oferta.get("shopName"),
@@ -113,7 +132,7 @@ def salvar_ofertas(ofertas: list) -> dict:
 
 def executar():
     print("🔍 Buscando ofertas na Shopee...")
-    ofertas = buscar_ofertas(keyword="oferta", limite=50)
+    ofertas = buscar_ofertas(keyword="oferta", limite=50, sort_type=2)
 
     if not ofertas:
         print("⚠️ Nenhuma oferta encontrada.")

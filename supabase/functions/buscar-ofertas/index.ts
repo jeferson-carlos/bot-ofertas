@@ -1,16 +1,15 @@
 import { createClient } from "jsr:@supabase/supabase-js@2"
 
-const SHOPEE_APP_ID  = Deno.env.get("SHOPEE_APP_ID")!
-const SHOPEE_SECRET  = Deno.env.get("SHOPEE_SECRET")!
-const BASE_URL       = "https://open-api.affiliate.shopee.com.br/graphql"
-const DESCONTO_MIN   = 10
+const SHOPEE_APP_ID = Deno.env.get("SHOPEE_APP_ID")!
+const SHOPEE_SECRET = Deno.env.get("SHOPEE_SECRET")!
+const BASE_URL      = "https://open-api.affiliate.shopee.com.br/graphql"
+const DESCONTO_MIN  = 10
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
 )
 
-// Auth SHA256 — mesma lógica do coletor Python
 async function sha256hex(text: string): Promise<string> {
   const data   = new TextEncoder().encode(text)
   const buffer = await crypto.subtle.digest("SHA-256", data)
@@ -26,13 +25,20 @@ async function getHeaders(payload: string) {
   }
 }
 
-async function buscarPorKeyword(keyword: string): Promise<any[]> {
+function calcularDesconto(precoMax: string, precoMin: string): number {
+  const max = parseFloat(precoMax || "0")
+  const min = parseFloat(precoMin || "0")
+  if (max > 0 && min < max) return Math.round((1 - min / max) * 1000) / 10
+  return 0
+}
+
+async function buscarPorKeyword(keyword: string, sortType: number): Promise<any[]> {
   const payload = JSON.stringify({
     query: `{
       productOfferV2(
         keyword: "${keyword}",
         listType: 1,
-        sortType: 5,
+        sortType: ${sortType},
         page: 1,
         limit: 50
       ) {
@@ -55,7 +61,9 @@ async function buscarPorKeyword(keyword: string): Promise<any[]> {
   }
 
   const nodes = data?.data?.productOfferV2?.nodes ?? []
-  return nodes.filter((n: any) => parseFloat(n.priceDiscountRate || "0") >= DESCONTO_MIN)
+
+  // Filtra por desconto CALCULADO — não confia no campo priceDiscountRate
+  return nodes.filter((n: any) => calcularDesconto(n.priceMax, n.priceMin) >= DESCONTO_MIN)
 }
 
 async function salvarOfertas(ofertas: any[]): Promise<{ novos: number; duplicatas: number }> {
@@ -77,7 +85,7 @@ async function salvarOfertas(ofertas: any[]): Promise<{ novos: number; duplicata
       titulo:              oferta.productName,
       preco_original:      parseFloat(oferta.priceMax),
       preco_desconto:      parseFloat(oferta.priceMin),
-      percentual_desconto: Math.round(parseFloat(oferta.priceDiscountRate || "0")),
+      percentual_desconto: Math.round(calcularDesconto(oferta.priceMax, oferta.priceMin)),
       link_afiliado:       oferta.offerLink,
       imagem_url:          oferta.imageUrl,
       loja:                oferta.shopName,
@@ -99,36 +107,40 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS })
 
   try {
-    // Busca keywords ativas (de todos os usuários ou de um usuário específico)
-    const body = await req.json().catch(() => ({}))
+    const body   = await req.json().catch(() => ({}))
     const userId = body?.user_id
 
-    let query = supabase.from("keywords").select("keyword").eq("ativo", true)
+    let query = supabase.from("keywords").select("keyword, sort_type").eq("ativo", true)
     if (userId) query = query.eq("user_id", userId)
 
     const { data: keywords, error } = await query
-
     if (error) throw new Error("Erro ao buscar keywords: " + error.message)
 
-    // Fallback: se não há keywords, usa "oferta" como padrão
-    const lista: string[] = keywords && keywords.length > 0
-      ? [...new Set(keywords.map((k: any) => k.keyword))]
-      : ["oferta"]
+    // Fallback: sem keywords, usa "oferta" com mais vendidos
+    const lista = keywords && keywords.length > 0
+      ? keywords
+      : [{ keyword: "oferta", sort_type: 2 }]
 
-    console.log(`🔍 Buscando ${lista.length} keyword(s): ${lista.join(", ")}`)
+    // Deduplica keywords repetidas (mantém a última configuração)
+    const unique = Object.values(
+      lista.reduce((acc: any, k: any) => ({ ...acc, [k.keyword]: k }), {})
+    ) as { keyword: string; sort_type: number }[]
+
+    console.log(`🔍 Buscando ${unique.length} keyword(s)`)
 
     let totalNovos = 0, totalDuplicatas = 0
 
-    for (const keyword of lista) {
-      const ofertas = await buscarPorKeyword(keyword)
+    for (const { keyword, sort_type } of unique) {
+      const sortType = sort_type ?? 2
+      const ofertas  = await buscarPorKeyword(keyword, sortType)
       const { novos, duplicatas } = await salvarOfertas(ofertas)
-      totalNovos     += novos
+      totalNovos      += novos
       totalDuplicatas += duplicatas
-      console.log(`  "${keyword}": ${novos} novos, ${duplicatas} duplicatas`)
+      console.log(`  "${keyword}" (sort=${sortType}): ${novos} novos, ${duplicatas} duplicatas`)
     }
 
     return Response.json(
-      { ok: true, novos: totalNovos, duplicatas: totalDuplicatas, keywords: lista.length },
+      { ok: true, novos: totalNovos, duplicatas: totalDuplicatas, keywords: unique.length },
       { headers: { ...CORS, "Content-Type": "application/json" } }
     )
 

@@ -7,10 +7,19 @@ const BUSCAR_URL = import.meta.env.VITE_SUPABASE_URL + '/functions/v1/buscar-ofe
 
 const LIMITE_PLAN = { free: 0, pro: 3, premium: Infinity }
 
+const SORT_OPTIONS = [
+  { value: 2, label: 'Mais vendidos' },
+  { value: 1, label: 'Relevância' },
+  { value: 3, label: 'Menor preço' },
+  { value: 4, label: 'Maior preço' },
+  { value: 5, label: 'Maior comissão' },
+]
+
 export default function Keywords() {
   const { user, profile, temAcesso } = useAuth()
   const [keywords, setKeywords]     = useState([])
   const [novaKeyword, setNova]      = useState('')
+  const [novoSort, setNovoSort]     = useState(2)
   const [loading, setLoading]       = useState(true)
   const [salvando, setSalvando]     = useState(false)
   const [buscando, setBuscando]     = useState(false)
@@ -43,10 +52,11 @@ export default function Keywords() {
     }
     setSalvando(true)
     setErro('')
-    const { error } = await supabase.from('keywords').insert({ keyword, user_id: user.id })
+    const { error } = await supabase.from('keywords').insert({ keyword, user_id: user.id, sort_type: novoSort })
     setSalvando(false)
     if (error) { setErro('Erro ao salvar keyword.'); return }
     setNova('')
+    setNovoSort(2)
     carregarKeywords()
   }
 
@@ -141,11 +151,18 @@ export default function Keywords() {
           value={novaKeyword}
           onChange={e => setNova(e.target.value)}
           disabled={keywords.length >= limite}
-          style={{
-            ...styles.input,
-            opacity: keywords.length >= limite ? 0.5 : 1
-          }}
+          style={{ ...styles.input, opacity: keywords.length >= limite ? 0.5 : 1 }}
         />
+        <select
+          value={novoSort}
+          onChange={e => setNovoSort(Number(e.target.value))}
+          disabled={keywords.length >= limite}
+          style={{ ...styles.select, opacity: keywords.length >= limite ? 0.5 : 1 }}
+        >
+          {SORT_OPTIONS.map(o => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
         <button
           type="submit"
           disabled={salvando || keywords.length >= limite || !novaKeyword.trim()}
@@ -166,6 +183,9 @@ export default function Keywords() {
             <div key={kw.id} style={styles.item}>
               <div style={styles.itemEsq}>
                 <span style={styles.itemKeyword}>{kw.keyword}</span>
+                <span style={styles.itemSortLabel}>
+                  {SORT_OPTIONS.find(o => o.value === (kw.sort_type ?? 2))?.label}
+                </span>
                 <span style={{ ...styles.itemStatus, color: kw.ativo ? '#10b981' : '#6b7280' }}>
                   ● {kw.ativo ? 'ativo' : 'pausado'}
                 </span>
@@ -194,8 +214,10 @@ const styles = {
   resultado:      { background: '#052e16', border: '1px solid #10b981', color: '#10b981', borderRadius: '10px', padding: '14px 16px', marginBottom: '20px', fontSize: '14px' },
   erroBox:        { background: '#450a0a', border: '1px solid #ef4444', color: '#ef4444', borderRadius: '10px', padding: '14px 16px', marginBottom: '20px', fontSize: '14px' },
   form:           { display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' },
-  input:          { flex: 1, minWidth: '200px', background: '#1e293b', border: '1px solid #374151', borderRadius: '8px', padding: '10px 14px', color: '#e2e8f0', fontSize: '14px' },
+  input:          { flex: 1, minWidth: '160px', background: '#1e293b', border: '1px solid #374151', borderRadius: '8px', padding: '10px 14px', color: '#e2e8f0', fontSize: '14px' },
+  select:         { background: '#1e293b', border: '1px solid #374151', borderRadius: '8px', padding: '10px 12px', color: '#e2e8f0', fontSize: '14px', cursor: 'pointer' },
   botaoAdicionar: { background: '#1e293b', border: '1px solid #6366f1', color: '#6366f1', borderRadius: '8px', padding: '10px 18px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' },
+  itemSortLabel:  { background: '#0f1117', color: '#6b7280', fontSize: '11px', padding: '2px 8px', borderRadius: '6px' },
   vazio:          { textAlign: 'center', color: '#6b7280', marginTop: '40px' },
   lista:          { display: 'flex', flexDirection: 'column', gap: '10px' },
   item:           { background: '#1e293b', border: '1px solid #374151', borderRadius: '10px', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' },
