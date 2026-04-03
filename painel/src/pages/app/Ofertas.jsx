@@ -107,6 +107,11 @@ export default function Ofertas() {
                     R$ {parseFloat(oferta.preco_desconto).toFixed(2)}
                   </span>
                 </div>
+                {oferta.comissao > 0 && (
+                  <p style={styles.comissao}>
+                    💰 Comissão: {parseFloat(oferta.comissao).toFixed(2)}%
+                  </p>
+                )}
               </div>
               {filtro === 'pendente' && (
                 <div style={styles.acoes}>
@@ -154,6 +159,7 @@ const styles = {
   precos:         { display: 'flex', alignItems: 'center', gap: '10px' },
   precoOriginal:  { color: '#6b7280', fontSize: '12px', textDecoration: 'line-through' },
   precoDesconto:  { color: '#10b981', fontSize: '18px', fontWeight: 'bold' },
+  comissao:       { color: '#f59e0b', fontSize: '11px', margin: '6px 0 0' },
   acoes:          { display: 'flex', gap: '8px', padding: '0 14px 10px' },
   botaoEnviar:    { flex: 1, padding: '10px', background: '#6366f1', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' },
   botaoDescartar: { flex: 1, padding: '10px', background: '#374151', color: '#9ca3af', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '13px' },

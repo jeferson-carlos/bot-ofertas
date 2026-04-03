@@ -118,6 +118,7 @@ def salvar_ofertas(ofertas: list) -> dict:
             "preco_original":       float(oferta["priceMax"]),
             "preco_desconto":       float(oferta["priceMin"]),
             "percentual_desconto":  int(calcular_desconto(oferta.get("priceMax"), oferta.get("priceMin"))),
+            "comissao":             float(oferta.get("commissionRate") or 0),
             "link_afiliado":        oferta["offerLink"],
             "imagem_url":           oferta.get("imageUrl"),
             "loja":                 oferta.get("shopName"),

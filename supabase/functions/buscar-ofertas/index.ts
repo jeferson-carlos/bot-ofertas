@@ -86,6 +86,7 @@ async function salvarOfertas(ofertas: any[]): Promise<{ novos: number; duplicata
       preco_original:      parseFloat(oferta.priceMax),
       preco_desconto:      parseFloat(oferta.priceMin),
       percentual_desconto: Math.round(calcularDesconto(oferta.priceMax, oferta.priceMin)),
+      comissao:            parseFloat(oferta.commissionRate || "0"),
       link_afiliado:       oferta.offerLink,
       imagem_url:          oferta.imageUrl,
       loja:                oferta.shopName,
