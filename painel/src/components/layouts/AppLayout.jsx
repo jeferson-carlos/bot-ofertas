@@ -2,12 +2,38 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 
 const PLANO_LABEL = { free: 'Free', pro: 'Pro', premium: 'Premium' }
-const PLANO_COR   = { free: '#6b7280', pro: '#6366f1', premium: '#f59e0b' }
+const PLANO_COR   = { free: '#64748b', pro: '#6366f1', premium: '#f59e0b' }
+
+const ICONS = {
+  dashboard: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+      <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+    </svg>
+  ),
+  ofertas: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/>
+      <line x1="7" y1="7" x2="7.01" y2="7"/>
+    </svg>
+  ),
+  keywords: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+  ),
+  lock: (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+      <path d="M7 11V7a5 5 0 0110 0v4"/>
+    </svg>
+  ),
+}
 
 const MENU = [
-  { path: '/app/dashboard', label: 'Dashboard',  icone: '📊', planoMinimo: null },
-  { path: '/app/ofertas',   label: 'Ofertas',     icone: '🏷️', planoMinimo: null },
-  { path: '/app/keywords',  label: 'Keywords',    icone: '🔍', planoMinimo: 'pro' },
+  { path: '/app/dashboard', label: 'Dashboard', icon: ICONS.dashboard, planoMinimo: null },
+  { path: '/app/ofertas',   label: 'Ofertas',   icon: ICONS.ofertas,   planoMinimo: null },
+  { path: '/app/keywords',  label: 'Keywords',  icon: ICONS.keywords,  planoMinimo: 'pro' },
 ]
 
 export default function AppLayout({ children }) {
@@ -22,65 +48,118 @@ export default function AppLayout({ children }) {
   const plano = profile?.plan || 'free'
 
   return (
-    <div style={styles.container}>
-      {/* Sidebar */}
-      <aside style={styles.sidebar}>
-        <div style={styles.logoWrap}>
-          <span style={styles.logo}>PropagAI</span>
-          <span style={{ ...styles.planoBadge, background: PLANO_COR[plano] }}>
+    <div style={s.container}>
+      <aside style={s.sidebar}>
+
+        {/* Logo */}
+        <div style={s.logoWrap}>
+          <div style={s.logoMarca}>
+            <div style={s.logoIcone}>P</div>
+            <span style={s.logoTexto}>PropagAI</span>
+          </div>
+          <span style={{ ...s.planoBadge, background: PLANO_COR[plano] + '22', color: PLANO_COR[plano], border: `1px solid ${PLANO_COR[plano]}44` }}>
             {PLANO_LABEL[plano]}
           </span>
         </div>
 
-        <nav style={styles.nav}>
+        {/* Navegação */}
+        <nav style={s.nav}>
+          <p style={s.navLabel}>Menu</p>
           {MENU.map(item => {
             const bloqueado = item.planoMinimo && !temAcesso(item.planoMinimo)
+            if (bloqueado) {
+              return (
+                <button
+                  key={item.path}
+                  onClick={() => navigate('/#precos')}
+                  style={s.navItemBloqueado}
+                  title={`Disponível no plano ${PLANO_LABEL[item.planoMinimo]}`}
+                >
+                  <span style={s.navIcone}>{item.icon}</span>
+                  <span style={s.navTexto}>{item.label}</span>
+                  <span style={s.lockWrap}>{ICONS.lock}</span>
+                </button>
+              )
+            }
             return (
               <NavLink
                 key={item.path}
-                to={bloqueado ? '/app/upgrade' : item.path}
+                to={item.path}
                 style={({ isActive }) => ({
-                  ...styles.navItem,
-                  ...(isActive && !bloqueado ? styles.navItemAtivo : {}),
-                  ...(bloqueado ? styles.navItemBloqueado : {}),
+                  ...s.navItem,
+                  ...(isActive ? s.navItemAtivo : {}),
                 })}
-                title={bloqueado ? `Disponível no plano ${PLANO_LABEL[item.planoMinimo]}` : ''}
               >
-                <span>{item.icone}</span>
-                <span>{item.label}</span>
-                {bloqueado && <span style={styles.lockIcon}>🔒</span>}
+                <span style={s.navIcone}>{item.icon}</span>
+                <span style={s.navTexto}>{item.label}</span>
               </NavLink>
             )
           })}
         </nav>
 
-        <div style={styles.userWrap}>
-          <p style={styles.userEmail}>{user?.email}</p>
-          <button onClick={handleSignOut} style={styles.botaoSair}>Sair</button>
+        {/* Upgrade banner para free */}
+        {plano === 'free' && (
+          <div style={s.upgradeBanner}>
+            <p style={s.upgradeTexto}>Desbloqueie o plano <strong>Pro</strong> e automatize tudo.</p>
+            <button onClick={() => navigate('/#precos')} style={s.upgradeBotao}>
+              Ver planos →
+            </button>
+          </div>
+        )}
+
+        {/* Usuário */}
+        <div style={s.userWrap}>
+          <div style={s.userAvatar}>{user?.email?.[0]?.toUpperCase()}</div>
+          <div style={s.userInfo}>
+            <p style={s.userEmail}>{user?.email}</p>
+            <button onClick={handleSignOut} style={s.sairLink}>Sair da conta</button>
+          </div>
         </div>
+
       </aside>
 
-      {/* Conteúdo */}
-      <main style={styles.main}>
+      <main style={s.main}>
         {children}
       </main>
     </div>
   )
 }
 
-const styles = {
-  container:        { display: 'flex', minHeight: '100vh', background: '#0f1117', fontFamily: 'sans-serif' },
-  sidebar:          { width: '220px', minHeight: '100vh', background: '#111827', borderRight: '1px solid #1e293b', display: 'flex', flexDirection: 'column', padding: '24px 0', flexShrink: 0 },
-  logoWrap:         { padding: '0 20px 24px', borderBottom: '1px solid #1e293b', display: 'flex', flexDirection: 'column', gap: '8px' },
-  logo:             { color: '#6366f1', fontSize: '18px', fontWeight: 'bold' },
-  planoBadge:       { alignSelf: 'flex-start', color: '#fff', fontSize: '10px', fontWeight: 'bold', padding: '2px 8px', borderRadius: '10px', textTransform: 'uppercase' },
-  nav:              { flex: 1, padding: '16px 0' },
-  navItem:          { display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 20px', color: '#9ca3af', textDecoration: 'none', fontSize: '14px', transition: 'all 0.15s' },
-  navItemAtivo:     { color: '#e2e8f0', background: '#1e293b', borderRight: '2px solid #6366f1' },
-  navItemBloqueado: { color: '#4b5563', cursor: 'not-allowed', opacity: 0.6 },
-  lockIcon:         { marginLeft: 'auto', fontSize: '11px' },
-  userWrap:         { padding: '16px 20px', borderTop: '1px solid #1e293b' },
-  userEmail:        { color: '#6b7280', fontSize: '11px', marginBottom: '10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
-  botaoSair:        { background: 'transparent', color: '#6b7280', border: '1px solid #374151', borderRadius: '6px', padding: '6px 12px', cursor: 'pointer', fontSize: '12px', width: '100%' },
-  main:             { flex: 1, padding: '32px', overflowY: 'auto' },
+const s = {
+  container:        { display: 'flex', minHeight: '100vh', background: '#0b0f1a', fontFamily: 'system-ui, sans-serif' },
+
+  // Sidebar
+  sidebar:          { width: '240px', minHeight: '100vh', background: '#0f1117', borderRight: '1px solid #1e293b', display: 'flex', flexDirection: 'column', flexShrink: 0 },
+
+  // Logo
+  logoWrap:         { padding: '20px 20px 16px', borderBottom: '1px solid #1e293b', display: 'flex', flexDirection: 'column', gap: '10px' },
+  logoMarca:        { display: 'flex', alignItems: 'center', gap: '10px' },
+  logoIcone:        { width: '28px', height: '28px', background: 'linear-gradient(135deg, #6366f1, #818cf8)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '800', fontSize: '14px', flexShrink: 0 },
+  logoTexto:        { color: '#f1f5f9', fontSize: '16px', fontWeight: '700', letterSpacing: '-0.3px' },
+  planoBadge:       { alignSelf: 'flex-start', fontSize: '10px', fontWeight: '700', padding: '3px 10px', borderRadius: '100px', textTransform: 'uppercase', letterSpacing: '0.8px' },
+
+  // Nav
+  nav:              { flex: 1, padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: '2px' },
+  navLabel:         { color: '#374151', fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.2px', padding: '0 8px', marginBottom: '6px' },
+  navItem:          { display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 12px', color: '#64748b', textDecoration: 'none', fontSize: '14px', borderRadius: '8px', transition: 'all 0.15s', fontWeight: '500' },
+  navItemAtivo:     { color: '#f1f5f9', background: '#1e293b' },
+  navItemBloqueado: { display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 12px', color: '#374151', fontSize: '14px', borderRadius: '8px', background: 'transparent', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left', fontFamily: 'inherit', fontWeight: '500' },
+  navIcone:         { flexShrink: 0, display: 'flex' },
+  navTexto:         { flex: 1 },
+  lockWrap:         { color: '#374151', display: 'flex' },
+
+  // Upgrade banner
+  upgradeBanner:    { margin: '0 12px 12px', background: 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(129,140,248,0.08))', border: '1px solid rgba(99,102,241,0.25)', borderRadius: '12px', padding: '16px' },
+  upgradeTexto:     { color: '#94a3b8', fontSize: '12px', lineHeight: 1.5, marginBottom: '10px' },
+  upgradeBotao:     { background: '#6366f1', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 14px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', width: '100%', fontFamily: 'inherit' },
+
+  // Usuário
+  userWrap:         { padding: '14px 16px', borderTop: '1px solid #1e293b', display: 'flex', alignItems: 'center', gap: '10px' },
+  userAvatar:       { width: '32px', height: '32px', background: '#1e293b', border: '1px solid #374151', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '13px', fontWeight: '700', flexShrink: 0 },
+  userInfo:         { flex: 1, minWidth: 0 },
+  userEmail:        { color: '#64748b', fontSize: '11px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '2px' },
+  sairLink:         { background: 'none', border: 'none', color: '#475569', fontSize: '11px', cursor: 'pointer', padding: 0, fontFamily: 'inherit' },
+
+  // Main
+  main:             { flex: 1, padding: '36px 40px', overflowY: 'auto', minWidth: 0 },
 }

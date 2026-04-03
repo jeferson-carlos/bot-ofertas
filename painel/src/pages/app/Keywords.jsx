@@ -26,12 +26,11 @@ export default function Keywords() {
   const [buscando, setBuscando]     = useState(false)
   const [resultado, setResultado]   = useState(null)
   const [erro, setErro]             = useState('')
+  const [usoBusca, setUsoBusca]     = useState(0)
 
   const plano       = profile?.plan || 'free'
   const limite      = LIMITE_PLAN[plano] ?? 0
   const limiteBusca = LIMITE_BUSCA_DIA[plano] ?? 0
-
-  const [usoBusca, setUsoBusca] = useState(0)
 
   useEffect(() => {
     if (temAcesso('pro')) {
@@ -117,13 +116,13 @@ export default function Keywords() {
     return (
       <FeatureBloqueada plano="pro">
         <div style={{ padding: '8px' }}>
-          <h1 style={styles.titulo}>Keywords</h1>
-          <p style={styles.sub}>Gerencie palavras-chave para busca automática de ofertas.</p>
-          <div style={styles.listaFake}>
+          <h1 style={s.titulo}>Keywords</h1>
+          <p style={s.sub}>Gerencie palavras-chave para busca automática de ofertas.</p>
+          <div style={s.listaFake}>
             {['tênis nike', 'fone bluetooth', 'smartwatch'].map(k => (
-              <div key={k} style={styles.itemFake}>
-                <span>{k}</span>
-                <span style={{ color: '#10b981', fontSize: '11px' }}>● ativo</span>
+              <div key={k} style={s.itemFake}>
+                <span style={{ color: '#94a3b8', fontWeight: '500' }}>{k}</span>
+                <span style={{ color: '#22c55e', fontSize: '11px', fontWeight: '600' }}>● ativo</span>
               </div>
             ))}
           </div>
@@ -132,128 +131,204 @@ export default function Keywords() {
     )
   }
 
+  const ativasCount  = keywords.filter(k => k.ativo).length
+  const limiteStr    = limite === Infinity ? '∞' : limite
+  const buscaLimStr  = limiteBusca === Infinity ? '∞' : limiteBusca
+  const podeBuscar   = !buscando && ativasCount > 0 && usoBusca < limiteBusca
+  const barraProgresso = limiteBusca > 0 ? Math.min((usoBusca / limiteBusca) * 100, 100) : 0
+
   return (
     <div>
+
       {/* Header */}
-      <div style={styles.header}>
+      <div style={s.header}>
         <div>
-          <h1 style={styles.titulo}>Keywords</h1>
-          <p style={styles.sub}>
-            {keywords.length}/{limite === Infinity ? '∞' : limite} keywords — busca automática a cada hora
-          </p>
+          <h1 style={s.titulo}>Keywords</h1>
+          <p style={s.sub}>Busca automática a cada hora • {keywords.length}/{limiteStr} keywords</p>
         </div>
-        <div style={{ textAlign: 'right' }}>
+
+        {/* Bloco buscar */}
+        <div style={s.buscarBloco}>
           <button
             onClick={buscarAgora}
-            disabled={buscando || keywords.filter(k => k.ativo).length === 0 || usoBusca >= limiteBusca}
-            style={{
-              ...styles.botaoBuscar,
-              opacity: (buscando || keywords.filter(k => k.ativo).length === 0 || usoBusca >= limiteBusca) ? 0.5 : 1
-            }}
+            disabled={!podeBuscar}
+            style={{ ...s.botaoBuscar, opacity: podeBuscar ? 1 : 0.5 }}
           >
-            {buscando ? '⏳ Buscando...' : '⚡ Buscar agora'}
+            {buscando ? (
+              <>
+                <span style={s.spinner} />
+                Buscando...
+              </>
+            ) : (
+              <>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                </svg>
+                Buscar agora
+              </>
+            )}
           </button>
-          <p style={styles.contadorBusca}>
-            {usoBusca}/{limiteBusca === Infinity ? '∞' : limiteBusca} buscas hoje
-          </p>
+          <div style={s.contadorWrap}>
+            <div style={s.barraFundo}>
+              <div style={{ ...s.barraPreench, width: `${barraProgresso}%` }} />
+            </div>
+            <p style={s.contadorTexto}>{usoBusca}/{buscaLimStr} buscas hoje</p>
+          </div>
         </div>
       </div>
 
-      {/* Resultado da busca */}
+      {/* Feedback */}
       {resultado && (
-        <div style={styles.resultado}>
-          ✅ Busca concluída — <strong>{resultado.novos}</strong> novas ofertas encontradas
-          {resultado.duplicatas > 0 && `, ${resultado.duplicatas} já existiam`}.
+        <div style={s.resultadoBox}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <span>Busca concluída — <strong>{resultado.novos}</strong> novas ofertas encontradas{resultado.duplicatas > 0 ? `, ${resultado.duplicatas} já existiam` : ''}.</span>
+        </div>
+      )}
+      {erro && (
+        <div style={s.erroBox}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span>{erro}</span>
         </div>
       )}
 
-      {erro && <div style={styles.erroBox}>{erro}</div>}
-
       {/* Form adicionar */}
-      <form onSubmit={adicionarKeyword} style={styles.form}>
-        <input
-          type="text"
-          placeholder="Ex: tênis nike, fone bluetooth..."
-          value={novaKeyword}
-          onChange={e => setNova(e.target.value)}
-          disabled={keywords.length >= limite}
-          style={{ ...styles.input, opacity: keywords.length >= limite ? 0.5 : 1 }}
-        />
-        <select
-          value={novoSort}
-          onChange={e => setNovoSort(Number(e.target.value))}
-          disabled={keywords.length >= limite}
-          style={{ ...styles.select, opacity: keywords.length >= limite ? 0.5 : 1 }}
-        >
-          {SORT_OPTIONS.map(o => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
-        <button
-          type="submit"
-          disabled={salvando || keywords.length >= limite || !novaKeyword.trim()}
-          style={styles.botaoAdicionar}
-        >
-          {salvando ? 'Salvando...' : '+ Adicionar'}
-        </button>
-      </form>
+      <div style={s.formBloco}>
+        <form onSubmit={adicionarKeyword} style={s.form}>
+          <input
+            type="text"
+            placeholder="Ex: tênis nike, fone bluetooth..."
+            value={novaKeyword}
+            onChange={e => setNova(e.target.value)}
+            disabled={keywords.length >= limite}
+            style={{ ...s.input, opacity: keywords.length >= limite ? 0.5 : 1 }}
+          />
+          <select
+            value={novoSort}
+            onChange={e => setNovoSort(Number(e.target.value))}
+            disabled={keywords.length >= limite}
+            style={{ ...s.select, opacity: keywords.length >= limite ? 0.5 : 1 }}
+          >
+            {SORT_OPTIONS.map(o => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+          <button
+            type="submit"
+            disabled={salvando || keywords.length >= limite || !novaKeyword.trim()}
+            style={{ ...s.botaoAdicionar, opacity: (salvando || keywords.length >= limite || !novaKeyword.trim()) ? 0.5 : 1 }}
+          >
+            {salvando ? 'Salvando...' : '+ Adicionar'}
+          </button>
+        </form>
+        {keywords.length >= limite && (
+          <p style={s.limiteAviso}>Limite de {limiteStr} keywords atingido para seu plano.</p>
+        )}
+      </div>
 
       {/* Lista */}
       {loading ? (
-        <p style={styles.vazio}>Carregando...</p>
+        <div style={s.vazioWrap}>
+          <p style={s.vazioTexto}>Carregando...</p>
+        </div>
       ) : keywords.length === 0 ? (
-        <p style={styles.vazio}>Nenhuma keyword cadastrada. Adicione uma acima.</p>
+        <div style={s.vazioWrap}>
+          <div style={s.vazioIconeWrap}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#334155" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+          </div>
+          <p style={s.vazioTitulo}>Nenhuma keyword ainda</p>
+          <p style={s.vazioTexto}>Adicione palavras-chave para buscar ofertas automaticamente.</p>
+        </div>
       ) : (
-        <div style={styles.lista}>
-          {keywords.map(kw => (
-            <div key={kw.id} style={styles.item}>
-              <div style={styles.itemEsq}>
-                <span style={styles.itemKeyword}>{kw.keyword}</span>
-                <span style={styles.itemSortLabel}>
-                  {SORT_OPTIONS.find(o => o.value === (kw.sort_type ?? 2))?.label}
-                </span>
-                <span style={{ ...styles.itemStatus, color: kw.ativo ? '#10b981' : '#6b7280' }}>
-                  ● {kw.ativo ? 'ativo' : 'pausado'}
-                </span>
+        <div style={s.lista}>
+          {keywords.map(kw => {
+            const sortLabel = SORT_OPTIONS.find(o => o.value === (kw.sort_type ?? 2))?.label
+            return (
+              <div key={kw.id} style={s.item}>
+                {/* Status indicator */}
+                <div style={{ ...s.statusDot, background: kw.ativo ? '#22c55e' : '#334155' }} />
+
+                <div style={s.itemCorpo}>
+                  <p style={s.itemKeyword}>{kw.keyword}</p>
+                  <div style={s.itemMeta}>
+                    <span style={s.metaPill}>{sortLabel}</span>
+                    <span style={{ ...s.metaStatus, color: kw.ativo ? '#22c55e' : '#475569' }}>
+                      {kw.ativo ? 'ativo' : 'pausado'}
+                    </span>
+                  </div>
+                </div>
+
+                <div style={s.itemAcoes}>
+                  <button onClick={() => toggleAtivo(kw)} style={{ ...s.botaoToggle, color: kw.ativo ? '#f59e0b' : '#22c55e', borderColor: kw.ativo ? '#f59e0b44' : '#22c55e44' }}>
+                    {kw.ativo ? 'Pausar' : 'Ativar'}
+                  </button>
+                  <button onClick={() => remover(kw.id)} style={s.botaoRemover} title="Remover">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/>
+                    </svg>
+                  </button>
+                </div>
               </div>
-              <div style={styles.itemAcoes}>
-                <button onClick={() => toggleAtivo(kw)} style={styles.botaoToggle}>
-                  {kw.ativo ? 'Pausar' : 'Ativar'}
-                </button>
-                <button onClick={() => remover(kw.id)} style={styles.botaoRemover}>
-                  🗑️
-                </button>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>
   )
 }
 
-const styles = {
-  header:         { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' },
-  titulo:         { color: '#e2e8f0', fontSize: '22px', fontWeight: 'bold', margin: '0 0 4px' },
-  sub:            { color: '#6b7280', fontSize: '13px', margin: 0 },
-  botaoBuscar:    { background: '#6366f1', color: '#fff', border: 'none', borderRadius: '10px', padding: '12px 20px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' },
-  contadorBusca:  { color: '#6b7280', fontSize: '11px', marginTop: '6px' },
-  resultado:      { background: '#052e16', border: '1px solid #10b981', color: '#10b981', borderRadius: '10px', padding: '14px 16px', marginBottom: '20px', fontSize: '14px' },
-  erroBox:        { background: '#450a0a', border: '1px solid #ef4444', color: '#ef4444', borderRadius: '10px', padding: '14px 16px', marginBottom: '20px', fontSize: '14px' },
-  form:           { display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' },
-  input:          { flex: 1, minWidth: '160px', background: '#1e293b', border: '1px solid #374151', borderRadius: '8px', padding: '10px 14px', color: '#e2e8f0', fontSize: '14px' },
-  select:         { background: '#1e293b', border: '1px solid #374151', borderRadius: '8px', padding: '10px 12px', color: '#e2e8f0', fontSize: '14px', cursor: 'pointer' },
-  botaoAdicionar: { background: '#1e293b', border: '1px solid #6366f1', color: '#6366f1', borderRadius: '8px', padding: '10px 18px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' },
-  itemSortLabel:  { background: '#0f1117', color: '#6b7280', fontSize: '11px', padding: '2px 8px', borderRadius: '6px' },
-  vazio:          { textAlign: 'center', color: '#6b7280', marginTop: '40px' },
-  lista:          { display: 'flex', flexDirection: 'column', gap: '10px' },
-  item:           { background: '#1e293b', border: '1px solid #374151', borderRadius: '10px', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' },
-  itemEsq:        { display: 'flex', alignItems: 'center', gap: '12px' },
-  itemKeyword:    { color: '#e2e8f0', fontSize: '14px', fontWeight: '500' },
-  itemStatus:     { fontSize: '11px', fontWeight: 'bold' },
-  itemAcoes:      { display: 'flex', gap: '8px' },
-  botaoToggle:    { background: 'transparent', border: '1px solid #374151', color: '#9ca3af', borderRadius: '6px', padding: '6px 12px', cursor: 'pointer', fontSize: '12px' },
-  botaoRemover:   { background: 'transparent', border: '1px solid #374151', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', fontSize: '12px' },
-  listaFake:      { display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '400px' },
-  itemFake:       { background: '#1e293b', border: '1px solid #374151', borderRadius: '10px', padding: '14px 16px', color: '#9ca3af', fontSize: '14px', display: 'flex', justifyContent: 'space-between' },
+const s = {
+  // Header
+  header:         { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '28px', flexWrap: 'wrap', gap: '16px' },
+  titulo:         { color: '#f1f5f9', fontSize: '22px', fontWeight: '700', margin: '0 0 4px', letterSpacing: '-0.3px' },
+  sub:            { color: '#64748b', fontSize: '13px' },
+
+  // Buscar bloco
+  buscarBloco:    { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' },
+  botaoBuscar:    { display: 'flex', alignItems: 'center', background: '#6366f1', color: '#fff', border: 'none', borderRadius: '10px', padding: '11px 18px', cursor: 'pointer', fontWeight: '700', fontSize: '13px', fontFamily: 'inherit', transition: 'opacity 0.15s' },
+  spinner:        { width: '12px', height: '12px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', marginRight: '8px', animation: 'spin 0.8s linear infinite' },
+  contadorWrap:   { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', width: '140px' },
+  barraFundo:     { width: '100%', height: '3px', background: '#1e293b', borderRadius: '2px', overflow: 'hidden' },
+  barraPreench:   { height: '100%', background: '#6366f1', borderRadius: '2px', transition: 'width 0.3s' },
+  contadorTexto:  { color: '#475569', fontSize: '11px' },
+
+  // Feedback
+  resultadoBox:   { display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', color: '#22c55e', borderRadius: '10px', padding: '12px 16px', marginBottom: '20px', fontSize: '13px' },
+  erroBox:        { display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: '#ef4444', borderRadius: '10px', padding: '12px 16px', marginBottom: '20px', fontSize: '13px' },
+
+  // Form
+  formBloco:      { background: '#111827', border: '1px solid #1e293b', borderRadius: '12px', padding: '20px', marginBottom: '20px' },
+  form:           { display: 'flex', gap: '10px', flexWrap: 'wrap' },
+  input:          { flex: 1, minWidth: '160px', background: '#0f1117', border: '1px solid #1e293b', borderRadius: '8px', padding: '10px 14px', color: '#e2e8f0', fontSize: '13px', fontFamily: 'inherit' },
+  select:         { background: '#0f1117', border: '1px solid #1e293b', borderRadius: '8px', padding: '10px 12px', color: '#e2e8f0', fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit' },
+  botaoAdicionar: { background: '#6366f1', border: 'none', color: '#fff', borderRadius: '8px', padding: '10px 18px', cursor: 'pointer', fontWeight: '700', fontSize: '13px', fontFamily: 'inherit', transition: 'opacity 0.15s' },
+  limiteAviso:    { color: '#f59e0b', fontSize: '12px', marginTop: '12px' },
+
+  // Vazio
+  vazioWrap:      { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '56px', gap: '12px' },
+  vazioIconeWrap: { width: '64px', height: '64px', background: '#111827', border: '1px solid #1e293b', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '4px' },
+  vazioTitulo:    { color: '#94a3b8', fontSize: '15px', fontWeight: '600' },
+  vazioTexto:     { color: '#475569', fontSize: '13px', textAlign: 'center', maxWidth: '280px', lineHeight: '1.5' },
+
+  // Lista
+  lista:          { display: 'flex', flexDirection: 'column', gap: '8px' },
+  item:           { background: '#111827', border: '1px solid #1e293b', borderRadius: '12px', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '14px' },
+  statusDot:      { width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0 },
+  itemCorpo:      { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '5px' },
+  itemKeyword:    { color: '#e2e8f0', fontSize: '14px', fontWeight: '600' },
+  itemMeta:       { display: 'flex', alignItems: 'center', gap: '8px' },
+  metaPill:       { background: '#0f1117', color: '#64748b', fontSize: '11px', fontWeight: '500', padding: '2px 8px', borderRadius: '6px', border: '1px solid #1e293b' },
+  metaStatus:     { fontSize: '11px', fontWeight: '600' },
+  itemAcoes:      { display: 'flex', gap: '8px', flexShrink: 0 },
+  botaoToggle:    { background: 'transparent', border: '1px solid', borderRadius: '7px', padding: '6px 12px', cursor: 'pointer', fontSize: '12px', fontWeight: '600', fontFamily: 'inherit' },
+  botaoRemover:   { display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', background: 'transparent', border: '1px solid #1e293b', borderRadius: '7px', cursor: 'pointer', color: '#475569' },
+
+  // Fake (bloqueado)
+  listaFake:      { display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: '400px', marginTop: '16px' },
+  itemFake:       { background: '#111827', border: '1px solid #1e293b', borderRadius: '10px', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
 }
