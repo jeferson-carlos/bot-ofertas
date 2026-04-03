@@ -107,7 +107,7 @@ export default function Ofertas() {
                     R$ {parseFloat(oferta.preco_desconto).toFixed(2)}
                   </span>
                 </div>
-                {oferta.comissao > 0 && (
+                {oferta.comissao != null && (
                   <p style={styles.comissao}>
                     💰 Comissão: {parseFloat(oferta.comissao).toFixed(2)}%
                   </p>
