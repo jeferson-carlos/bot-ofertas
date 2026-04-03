@@ -11,7 +11,11 @@ const STATUS_LABELS = {
   descartado: { label: "Descartadas", cor: "#ef4444" },
 }
 
+
+
 export default function App() {
+  console.log("SUPABASE URL:", import.meta.env.VITE_SUPABASE_URL)
+  console.log("SUPABASE KEY:", import.meta.env.VITE_SUPABASE_KEY?.slice(0, 15))
   const [ofertas, setOfertas]   = useState([])
   const [filtro, setFiltro]     = useState("pendente")
   const [loading, setLoading]   = useState(true)
