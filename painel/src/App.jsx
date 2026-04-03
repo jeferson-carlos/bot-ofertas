@@ -21,17 +21,12 @@ export default function App() {
 
   async function carregarOfertas() {
   setLoading(true)
-  console.log("Carregando ofertas com filtro:", filtro)
   
   const { data, error } = await supabase
     .from("ofertas")
     .select("*")
     .eq("status", filtro)
     .order("criado_em", { ascending: false })
-
-  console.log("Data:", data)
-  console.log("Error:", error)
-  console.log("Total:", data?.length)
 
   setOfertas(data || [])
   setLoading(false)
@@ -43,18 +38,24 @@ export default function App() {
   setAcao(id)
   await fetch(FUNCTION_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_KEY}`
+    },
     body: JSON.stringify({ id, acao: "enviar" })
   })
   await carregarOfertas()
   setAcao(null)
 }
 
-  async function descartar(id) {
+async function descartar(id) {
   setAcao(id)
   await fetch(FUNCTION_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_KEY}`
+    },
     body: JSON.stringify({ id, acao: "descartar" })
   })
   await carregarOfertas()
