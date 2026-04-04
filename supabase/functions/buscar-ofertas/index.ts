@@ -11,6 +11,17 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
 )
 
+function getUserIdFromJWT(authHeader: string): string | null {
+  try {
+    const token   = authHeader.replace("Bearer ", "")
+    const payload = token.split(".")[1]
+    const decoded = JSON.parse(atob(payload))
+    return decoded.sub ?? null
+  } catch {
+    return null
+  }
+}
+
 async function sha256hex(text: string): Promise<string> {
   const data   = new TextEncoder().encode(text)
   const buffer = await crypto.subtle.digest("SHA-256", data)
@@ -177,11 +188,22 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS })
 
   try {
+    const authHeader   = req.headers.get("Authorization") ?? ""
+    const requestingId = getUserIdFromJWT(authHeader)
+
     const body   = await req.json().catch(() => ({}))
     const userId = body?.user_id as string | undefined
 
     // ─── Chamada manual (painel) — user_id fornecido ───────────────────────
     if (userId) {
+      // Garante que o userId do body bate com o JWT do solicitante
+      if (requestingId && userId !== requestingId) {
+        return Response.json(
+          { ok: false, erro: "Sem permissão" },
+          { status: 403, headers: { ...CORS, "Content-Type": "application/json" } }
+        )
+      }
+
       const { data: perfil } = await supabase
         .from("profiles")
         .select("plan, shopee_app_id, shopee_secret")

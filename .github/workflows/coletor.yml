@@ -8,12 +8,25 @@ on:
 jobs:
   coletar:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Executar busca de ofertas
         run: |
-          curl -sf -X POST "${{ secrets.SUPABASE_URL }}/functions/v1/buscar-ofertas" \
+          HTTP_CODE=$(curl -s -o result.json -w "%{http_code}" \
+            --max-time 120 \
+            -X POST "${{ secrets.SUPABASE_URL }}/functions/v1/buscar-ofertas" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_KEY }}" \
             -H "Content-Type: application/json" \
-            -d '{}' | tee result.json
+            -d '{}')
+
+          echo "HTTP Status: $HTTP_CODE"
           echo "Resultado: $(cat result.json)"
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ Falha na coleta: HTTP $HTTP_CODE"
+            exit 1
+          fi
+
+          NOVOS=$(python3 -c "import sys,json; d=json.load(open('result.json')); print(d.get('novos',0))" 2>/dev/null || echo "?")
+          echo "✅ Coleta concluída — $NOVOS novas ofertas"

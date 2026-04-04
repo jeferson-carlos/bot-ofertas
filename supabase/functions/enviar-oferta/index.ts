@@ -9,6 +9,17 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
 )
 
+function getUserIdFromJWT(authHeader: string): string | null {
+  try {
+    const token   = authHeader.replace("Bearer ", "")
+    const payload = token.split(".")[1]
+    const decoded = JSON.parse(atob(payload))
+    return decoded.sub ?? null
+  } catch {
+    return null
+  }
+}
+
 const CORS = {
   "Access-Control-Allow-Origin":  "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -62,6 +73,9 @@ async function enviarTelegram(oferta: any, botToken: string, chatId: string): Pr
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS })
 
+  const authHeader   = req.headers.get("Authorization") ?? ""
+  const requestingId = getUserIdFromJWT(authHeader)
+
   const { id, acao } = await req.json()
 
   if (!id) {
@@ -77,6 +91,11 @@ Deno.serve(async (req) => {
 
   if (!oferta) {
     return Response.json({ ok: false, erro: "Oferta não encontrada" }, { status: 404, headers: CORS })
+  }
+
+  // Verifica propriedade — usuário só pode operar suas próprias ofertas
+  if (oferta.user_id && requestingId && oferta.user_id !== requestingId) {
+    return Response.json({ ok: false, erro: "Sem permissão" }, { status: 403, headers: CORS })
   }
 
   // Ação: descartar

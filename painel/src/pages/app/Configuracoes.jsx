@@ -14,11 +14,14 @@ export default function Configuracoes() {
   const { user } = useAuth()
   const navigate = useNavigate()
 
-  const [form, setForm]       = useState(CAMPO_VAZIO)
-  const [loading, setLoading] = useState(true)
+  const [form, setForm]         = useState(CAMPO_VAZIO)
+  const [loading, setLoading]   = useState(true)
   const [salvando, setSalvando] = useState(false)
-  const [salvo, setSalvo]     = useState(false)
-  const [erro, setErro]       = useState('')
+  const [salvo, setSalvo]       = useState(false)
+  const [erro, setErro]         = useState('')
+  const [testando, setTestando] = useState(false)
+  const [testeOk, setTesteOk]   = useState('')
+  const [testeErro, setTesteErro] = useState('')
 
   useEffect(() => { carregar() }, [])
 
@@ -44,10 +47,53 @@ export default function Configuracoes() {
     setForm(prev => ({ ...prev, [campo]: valor }))
     setSalvo(false)
     setErro('')
+    setTesteOk('')
+    setTesteErro('')
+  }
+
+  function validarFormato() {
+    const token  = form.telegram_bot_token.trim()
+    const chatId = form.telegram_chat_id.trim()
+    const appId  = form.shopee_app_id.trim()
+    if (token && !/^\d+:[\w-]{30,}$/.test(token))
+      return 'Token Telegram inválido. Formato esperado: 123456789:ABCdef...'
+    if (chatId && !/^-?\d+$|^@\w+$/.test(chatId))
+      return 'Chat ID inválido. Use formato numérico (-100123...) ou @username.'
+    if (appId && !/^\d+$/.test(appId))
+      return 'App ID Shopee inválido. Deve conter apenas números.'
+    return null
+  }
+
+  async function testarTelegram() {
+    const token  = form.telegram_bot_token.trim()
+    const chatId = form.telegram_chat_id.trim()
+    if (!token || !chatId) {
+      setTesteErro('Preencha o Token e o Chat ID antes de testar.')
+      return
+    }
+    setTestando(true)
+    setTesteOk('')
+    setTesteErro('')
+    try {
+      const r1 = await fetch(`https://api.telegram.org/bot${token}/getMe`)
+      const d1 = await r1.json()
+      if (!d1.ok) throw new Error('Token inválido. Verifique e tente novamente.')
+
+      const r2 = await fetch(`https://api.telegram.org/bot${token}/getChat?chat_id=${encodeURIComponent(chatId)}`)
+      const d2 = await r2.json()
+      if (!d2.ok) throw new Error('Canal/grupo não encontrado. Verifique o Chat ID.')
+
+      setTesteOk(`Bot @${d1.result.username} conectado ao canal "${d2.result.title || d2.result.username || chatId}"`)
+    } catch (e) {
+      setTesteErro(e.message)
+    }
+    setTestando(false)
   }
 
   async function salvar(e) {
     e.preventDefault()
+    const erroFormato = validarFormato()
+    if (erroFormato) { setErro(erroFormato); return }
     setSalvando(true)
     setErro('')
     setSalvo(false)
@@ -134,6 +180,15 @@ export default function Configuracoes() {
                 <p style={s.dica}>ID numérico do grupo/canal ou @username público</p>
               </div>
             </div>
+          </div>
+
+          {/* Teste de conexão Telegram */}
+          <div style={s.testeWrap}>
+            <button type="button" onClick={testarTelegram} disabled={testando} style={s.botaoTestar}>
+              {testando ? 'Testando...' : 'Testar conexão Telegram'}
+            </button>
+            {testeOk  && <span style={s.testeSucesso}>{testeOk}</span>}
+            {testeErro && <span style={s.testeErro}>{testeErro}</span>}
           </div>
 
           {/* Bloco Shopee */}
@@ -225,6 +280,11 @@ const s = {
   label:        { color: '#94a3b8', fontSize: '12px', fontWeight: '600' },
   input:        { background: '#0f1117', border: '1px solid #1e293b', borderRadius: '8px', padding: '10px 14px', color: '#e2e8f0', fontSize: '13px', fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' },
   dica:         { color: '#475569', fontSize: '11px', lineHeight: '1.4' },
+
+  testeWrap:    { display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginTop: '-4px' },
+  botaoTestar:  { background: 'transparent', border: '1px solid #334155', color: '#94a3b8', borderRadius: '8px', padding: '8px 16px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', flexShrink: 0 },
+  testeSucesso: { color: '#22c55e', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' },
+  testeErro:    { color: '#ef4444', fontSize: '12px' },
 
   erroTexto:    { color: '#ef4444', fontSize: '13px' },
   sucessoBox:   { display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)', color: '#22c55e', borderRadius: '10px', padding: '12px 16px', fontSize: '13px' },

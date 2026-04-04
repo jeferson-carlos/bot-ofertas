@@ -69,6 +69,10 @@ export default function Keywords() {
       setErro(`Seu plano permite até ${limite} keywords.`)
       return
     }
+    if (keywords.some(k => k.keyword === keyword)) {
+      setErro(`Keyword "${keyword}" já existe na sua lista.`)
+      return
+    }
     setSalvando(true)
     setErro('')
     const { error } = await supabase.from('keywords').insert({ keyword, user_id: user.id, sort_type: novoSort })
