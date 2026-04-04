@@ -101,8 +101,15 @@ export default function Ofertas() {
       `📉 Desconto: ${pct}% OFF\n\n` +
       `🛒 Comprar agora: ${oferta.link_afiliado}`
     await navigator.clipboard.writeText(texto)
+    await supabase
+      .from('ofertas')
+      .update({ status: 'enviado', enviado_em: new Date().toISOString() })
+      .eq('id', oferta.id)
     setCopiado(oferta.id)
-    setTimeout(() => setCopiado(null), 2000)
+    setTimeout(() => {
+      setCopiado(null)
+      carregarOfertas(0)
+    }, 1500)
   }
 
   const cfg = STATUS_CONFIG[filtro]
