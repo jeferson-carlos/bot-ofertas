@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../supabaseClient'
 
@@ -65,6 +65,7 @@ export default function Planos() {
   const [salvando, setSalvando]                 = useState(false)
   const [erro, setErro]                         = useState('')
   const [largura, setLargura]                   = useState(window.innerWidth)
+  const confirmacaoRef                          = useRef(null)
 
   useEffect(() => {
     function onResize() { setLargura(window.innerWidth) }
@@ -79,6 +80,7 @@ export default function Planos() {
     if (planoId === planoAtual) return
     setPlanoSelecionado(planoId)
     setErro('')
+    setTimeout(() => confirmacaoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50)
   }
 
   async function confirmarAssinatura() {
@@ -207,7 +209,7 @@ export default function Planos() {
 
       {/* Painel de confirmação */}
       {planoSelecionado && planoSelecionado !== planoAtual && (
-        <div style={s.confirmacaoBox}>
+        <div ref={confirmacaoRef} style={s.confirmacaoBox}>
           <div style={s.confirmacaoInner}>
             <div style={s.confirmacaoIcone}>🚀</div>
             <div style={s.confirmacaoTextos}>

@@ -66,7 +66,7 @@ const MENU = [
   { path: '/app/dashboard',     label: 'Dashboard',      icon: ICONS.dashboard, planoMinimo: null },
   { path: '/app/ofertas',       label: 'Ofertas',        icon: ICONS.ofertas,   planoMinimo: null },
   { path: '/app/keywords',      label: 'Keywords',       icon: ICONS.keywords,   planoMinimo: 'pro' },
-  { path: '/app/relatorios',    label: 'Relatórios',     icon: ICONS.relatorios, planoMinimo: 'premium' },
+  { path: '/app/relatorios',    label: 'Relatórios',     icon: ICONS.relatorios, planoMinimo: null },
 ]
 
 const MENU_INFERIOR = [

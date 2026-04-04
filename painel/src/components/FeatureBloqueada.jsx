@@ -1,9 +1,13 @@
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 
 const LABELS = { pro: 'Pro', premium: 'Premium' }
 
 export default function FeatureBloqueada({ plano = 'pro', children }) {
-  const navigate = useNavigate()
+  const navigate      = useNavigate()
+  const { temAcesso } = useAuth()
+
+  if (temAcesso(plano)) return children
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
@@ -15,7 +19,7 @@ export default function FeatureBloqueada({ plano = 'pro', children }) {
           <span style={styles.icone}>🔒</span>
           <p style={styles.titulo}>Disponível no plano {LABELS[plano]}</p>
           <p style={styles.subtitulo}>Faça upgrade para desbloquear esta funcionalidade.</p>
-          <button onClick={() => navigate('/#precos')} style={styles.botao}>
+          <button onClick={() => navigate('/app/planos')} style={styles.botao}>
             Ver planos
           </button>
         </div>
