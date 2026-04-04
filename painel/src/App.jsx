@@ -14,6 +14,7 @@ import Planos        from './pages/app/Planos'
 import Configuracoes from './pages/app/Configuracoes'
 import Tutorial      from './pages/app/Tutorial'
 import Perfil        from './pages/app/Perfil'
+import Relatorios    from './pages/app/Relatorios'
 
 export default function App() {
   return (
@@ -37,6 +38,7 @@ export default function App() {
                 <Route path="configuracoes"   element={<Configuracoes />} />
                 <Route path="tutorial"        element={<Tutorial />} />
                 <Route path="perfil"          element={<Perfil />} />
+                <Route path="relatorios"      element={<Relatorios />} />
               </Routes>
             </AppLayout>
           </RotaProtegida>

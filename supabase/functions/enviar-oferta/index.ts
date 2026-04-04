@@ -26,20 +26,28 @@ const CORS = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization"
 }
 
-async function enviarTelegram(oferta: any, botToken: string, chatId: string): Promise<boolean> {
-  const desconto  = oferta.percentual_desconto ?? 0
-  const original  = parseFloat(oferta.preco_original).toFixed(2)
-  const desconto_ = parseFloat(oferta.preco_desconto).toFixed(2)
+const TEMPLATE_PADRAO =
+  "🔥 *OFERTA SHOPEE*\n\n" +
+  "📦 {titulo}\n\n" +
+  "🏪 Loja: {loja}\n" +
+  "💰 De: ~R$ {preco_original}~\n" +
+  "✅ Por: *R$ {preco}*\n" +
+  "📉 Desconto: *{desconto}% OFF*\n\n" +
+  "🛒 [Comprar agora]({link})"
 
-  const mensagem =
-    `🔥 *OFERTA SHOPEE*\n\n` +
-    `📦 ${oferta.titulo}\n\n` +
-    `🏪 Loja: ${oferta.loja || "Shopee"}\n` +
-    `💰 De: ~R$ ${original}~\n` +
-    `✅ Por: *R$ ${desconto_}*\n` +
-    `📉 Desconto: *${desconto}% OFF*\n\n` +
-    `🛒 [Comprar agora](${oferta.link_afiliado})`
+function aplicarTemplate(template: string | null, oferta: any): string {
+  const base = template || TEMPLATE_PADRAO
+  return base
+    .replace(/{titulo}/g,         oferta.titulo || "")
+    .replace(/{preco}/g,          parseFloat(oferta.preco_desconto).toFixed(2))
+    .replace(/{preco_original}/g, parseFloat(oferta.preco_original).toFixed(2))
+    .replace(/{desconto}/g,       String(oferta.percentual_desconto ?? 0))
+    .replace(/{loja}/g,           oferta.loja || "Shopee")
+    .replace(/{link}/g,           oferta.link_afiliado || "")
+}
 
+async function enviarTelegram(oferta: any, botToken: string, chatId: string, template: string | null): Promise<boolean> {
+  const mensagem = aplicarTemplate(template, oferta)
   const base = `https://api.telegram.org/bot${botToken}`
 
   if (oferta.imagem_url) {
@@ -104,24 +112,26 @@ Deno.serve(async (req) => {
     return Response.json({ ok: true }, { headers: CORS })
   }
 
-  // Ação: enviar
-  if (oferta.status === "enviado") {
+  // Ação: enviar normal — bloqueia reenvio acidental
+  if (acao === "enviar" && oferta.status === "enviado") {
     return Response.json({ ok: false, erro: "Oferta já enviada" }, { status: 400, headers: CORS })
   }
 
-  // Resolve credenciais Telegram: usa as do usuário, ou fallback global
+  // Resolve credenciais Telegram e template: usa as do usuário, ou fallback global
   let botToken = TELEGRAM_TOKEN_GLOBAL
   let chatId   = TELEGRAM_CHAT_ID_GLOBAL
+  let template: string | null = null
 
   if (oferta.user_id) {
     const { data: perfil } = await supabase
       .from("profiles")
-      .select("telegram_bot_token, telegram_chat_id")
+      .select("telegram_bot_token, telegram_chat_id, telegram_template")
       .eq("id", oferta.user_id)
       .single()
 
     if (perfil?.telegram_bot_token) botToken = perfil.telegram_bot_token
     if (perfil?.telegram_chat_id)   chatId   = perfil.telegram_chat_id
+    if (perfil?.telegram_template)  template = perfil.telegram_template
   }
 
   if (!botToken || !chatId) {
@@ -131,7 +141,7 @@ Deno.serve(async (req) => {
     )
   }
 
-  const sucesso = await enviarTelegram(oferta, botToken, chatId)
+  const sucesso = await enviarTelegram(oferta, botToken, chatId, template)
 
   if (!sucesso) {
     return Response.json({ ok: false, erro: "Falha ao enviar no Telegram. Verifique as credenciais em Configurações." }, { status: 500, headers: CORS })

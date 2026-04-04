@@ -157,11 +157,13 @@ async function registrarColeta(userId: string) {
 
 // Processa um único usuário: busca suas keywords usando suas credenciais
 async function processarUsuario(userId: string, appId: string, secret: string): Promise<{ novos: number; duplicatas: number }> {
-  const { data: keywords } = await supabase
-    .from("keywords")
-    .select("keyword, sort_type")
-    .eq("user_id", userId)
-    .eq("ativo", true)
+  const [kwResult, perfilResult] = await Promise.all([
+    supabase.from("keywords").select("keyword, sort_type").eq("user_id", userId).eq("ativo", true),
+    supabase.from("profiles").select("blacklist_termos").eq("id", userId).single(),
+  ])
+
+  const keywords  = kwResult.data
+  const blacklist = (perfilResult.data?.blacklist_termos ?? []) as string[]
 
   const lista = keywords && keywords.length > 0
     ? keywords
@@ -174,7 +176,15 @@ async function processarUsuario(userId: string, appId: string, secret: string): 
   let totalNovos = 0, totalDuplicatas = 0
 
   for (const { keyword, sort_type } of unique) {
-    const ofertas = await buscarPorKeyword(keyword, sort_type ?? 2, appId, secret)
+    let ofertas = await buscarPorKeyword(keyword, sort_type ?? 2, appId, secret)
+
+    if (blacklist.length > 0) {
+      ofertas = ofertas.filter((o: any) => !blacklist.some(termo =>
+        o.productName?.toLowerCase().includes(termo.toLowerCase()) ||
+        o.shopName?.toLowerCase().includes(termo.toLowerCase())
+      ))
+    }
+
     const { novos, duplicatas } = await salvarOfertas(ofertas, userId)
     totalNovos      += novos
     totalDuplicatas += duplicatas

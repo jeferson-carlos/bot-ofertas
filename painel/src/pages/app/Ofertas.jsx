@@ -88,6 +88,16 @@ export default function Ofertas() {
     setAcao(null)
   }
 
+  async function reenviar(id) {
+    setAcao(id)
+    await fetch(FUNCTION_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_KEY}` },
+      body: JSON.stringify({ id, acao: 'reenviar' })
+    })
+    setAcao(null)
+  }
+
   async function descartarSelecionados() {
     if (selecionados.size === 0) return
     setDescartandoLote(true)
@@ -346,6 +356,12 @@ export default function Ofertas() {
                         </>
                       )}
                     </div>
+                  ) : filtro === 'enviado' && plano !== 'free' ? (
+                    <div style={s.acoes}>
+                      <button onClick={() => reenviar(oferta.id)} disabled={emAcao} style={s.botaoReenviar}>
+                        {emAcao ? '...' : <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '5px' }}><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>Reenviar</>}
+                      </button>
+                    </div>
                   ) : (
                     <div style={{ flex: 1 }} />
                   )}
@@ -419,6 +435,7 @@ const s = {
   acoes:            { display: 'flex', gap: '6px', flex: 1 },
   botaoEnviar:      { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', background: '#6366f1', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '12px', fontFamily: 'inherit' },
   botaoCopiar:      { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', background: '#0f1117', color: '#22c55e', border: '1px solid #22c55e44', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '12px', fontFamily: 'inherit' },
+  botaoReenviar:    { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', background: '#0f1117', color: '#6366f1', border: '1px solid #6366f144', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '12px', fontFamily: 'inherit' },
   botaoDescartar:   { display: 'flex', alignItems: 'center', justifyContent: 'center', width: '34px', height: '34px', background: '#0f1117', color: '#475569', border: '1px solid #1e293b', borderRadius: '8px', cursor: 'pointer', flexShrink: 0 },
   linkVer:          { color: '#6366f1', fontSize: '12px', fontWeight: '600', flexShrink: 0, textDecoration: 'none' },
   botaoMais:        { background: 'transparent', border: '1px solid #1e293b', color: '#64748b', borderRadius: '10px', padding: '12px 36px', cursor: 'pointer', fontSize: '14px', fontFamily: 'inherit' },
