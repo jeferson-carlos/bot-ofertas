@@ -137,6 +137,13 @@ async function verificarEIncrementarUso(userId: string, plano: string): Promise<
   return { permitido: true, usado: usado + 1, limite }
 }
 
+async function registrarColeta(userId: string) {
+  await supabase
+    .from("profiles")
+    .update({ ultima_coleta_em: new Date().toISOString() })
+    .eq("id", userId)
+}
+
 // Processa um único usuário: busca suas keywords usando suas credenciais
 async function processarUsuario(userId: string, appId: string, secret: string): Promise<{ novos: number; duplicatas: number }> {
   const { data: keywords } = await supabase
@@ -202,6 +209,7 @@ Deno.serve(async (req) => {
       }
 
       const { novos, duplicatas } = await processarUsuario(userId, appId, secret)
+      await registrarColeta(userId)
 
       return Response.json(
         { ok: true, novos, duplicatas },
@@ -225,6 +233,7 @@ Deno.serve(async (req) => {
       for (const u of usuarios) {
         console.log(`👤 Processando usuário ${u.id}`)
         const { novos, duplicatas } = await processarUsuario(u.id, u.shopee_app_id, u.shopee_secret)
+        await registrarColeta(u.id)
         totalNovos      += novos
         totalDuplicatas += duplicatas
       }

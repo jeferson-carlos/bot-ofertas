@@ -24,7 +24,7 @@ const PLANOS = [
   },
   {
     nome: 'Pro',
-    preco: 'R$ 29',
+    preco: 'R$ 49',
     precoSub: '/ mês',
     cor: '#6366f1',
     destaque: true,
@@ -41,7 +41,7 @@ const PLANOS = [
   },
   {
     nome: 'Premium',
-    preco: 'R$ 79',
+    preco: 'R$ 99',
     precoSub: '/ mês',
     cor: '#f59e0b',
     features: [

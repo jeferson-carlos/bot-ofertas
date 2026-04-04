@@ -63,8 +63,57 @@ export default function Dashboard() {
     return stats[status] ?? 0
   }
 
+  const credenciaisOk = profile?.telegram_bot_token && profile?.shopee_app_id
+
+  function tempoRelativo(iso) {
+    if (!iso) return null
+    const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
+    if (diff < 60)   return 'há menos de 1 min'
+    if (diff < 3600) return `há ${Math.floor(diff / 60)} min`
+    if (diff < 86400) return `há ${Math.floor(diff / 3600)}h`
+    return `há ${Math.floor(diff / 86400)} dias`
+  }
+
+  const ultimaColeta  = profile?.ultima_coleta_em
+  const tempoColeta   = tempoRelativo(ultimaColeta)
+  // Cron roda a cada hora — calcula próxima execução
+  function proximaExecucao() {
+    const agora = new Date()
+    const proxima = new Date(agora)
+    proxima.setMinutes(0, 0, 0)
+    proxima.setHours(proxima.getHours() + 1)
+    const mins = Math.round((proxima - agora) / 60000)
+    return mins <= 1 ? 'em breve' : `em ${mins} min`
+  }
+  const telegramOk    = !!profile?.telegram_bot_token
+  const shopeeOk      = !!profile?.shopee_app_id
+
   return (
     <div>
+
+      {/* Banner de onboarding — aparece apenas quando credenciais não estão configuradas */}
+      {!credenciaisOk && (
+        <div style={s.onboardingBanner}>
+          <div style={s.onboardingIcone}>🚀</div>
+          <div style={s.onboardingTexto}>
+            <p style={s.onboardingTitulo}>Configure sua conta para começar</p>
+            <p style={s.onboardingSub}>Você precisa conectar o Shopee e o Telegram para receber ofertas automaticamente.</p>
+            <div style={s.onboardingPassos}>
+              <span style={{ ...s.onboardingPasso, color: shopeeOk ? '#22c55e' : '#f59e0b' }}>
+                {shopeeOk ? '✓' : '○'} Shopee Afiliados
+              </span>
+              <span style={s.onboardingSep}>→</span>
+              <span style={{ ...s.onboardingPasso, color: telegramOk ? '#22c55e' : '#f59e0b' }}>
+                {telegramOk ? '✓' : '○'} Telegram Bot
+              </span>
+            </div>
+          </div>
+          <div style={s.onboardingBotoes}>
+            <button onClick={() => navigate('/app/tutorial')} style={s.onboardingBotaoSec}>Ver tutorial</button>
+            <button onClick={() => navigate('/app/configuracoes')} style={s.onboardingBotao}>Configurar agora →</button>
+          </div>
+        </div>
+      )}
 
       {/* Header */}
       <div style={s.header}>
@@ -102,6 +151,21 @@ export default function Dashboard() {
             <div style={{ ...s.statBarra, background: cor }} />
           </div>
         ))}
+      </div>
+
+      {/* Status do bot */}
+      <div style={s.botStatus}>
+        <div style={s.botStatusEsq}>
+          <div style={{ ...s.botDot, background: credenciaisOk ? '#22c55e' : '#475569' }} />
+          <span style={s.botLabel}>
+            {credenciaisOk
+              ? tempoColeta ? `Última coleta ${tempoColeta}` : 'Bot ativo — aguardando primeira coleta'
+              : 'Bot inativo — credenciais não configuradas'}
+          </span>
+        </div>
+        {credenciaisOk && (
+          <span style={s.botProxima}>Próxima: {proximaExecucao()}</span>
+        )}
       </div>
 
       {/* Grid inferior */}
@@ -179,6 +243,19 @@ export default function Dashboard() {
 }
 
 const s = {
+  // Onboarding
+  onboardingBanner: { display: 'flex', alignItems: 'center', gap: '16px', background: 'linear-gradient(135deg, rgba(245,158,11,0.08), rgba(245,158,11,0.04))', border: '1px solid rgba(245,158,11,0.25)', borderRadius: '14px', padding: '20px 24px', marginBottom: '28px', flexWrap: 'wrap' },
+  onboardingIcone:  { fontSize: '32px', flexShrink: 0 },
+  onboardingTexto:  { flex: 1, minWidth: '200px' },
+  onboardingTitulo: { color: '#f1f5f9', fontSize: '15px', fontWeight: '700', marginBottom: '4px' },
+  onboardingSub:    { color: '#64748b', fontSize: '12px', lineHeight: '1.5', marginBottom: '10px' },
+  onboardingPassos: { display: 'flex', alignItems: 'center', gap: '8px' },
+  onboardingPasso:  { fontSize: '12px', fontWeight: '600' },
+  onboardingSep:    { color: '#334155', fontSize: '12px' },
+  onboardingBotoes: { display: 'flex', gap: '8px', flexShrink: 0, flexWrap: 'wrap' },
+  onboardingBotao:  { background: '#f59e0b', color: '#000', border: 'none', borderRadius: '8px', padding: '9px 16px', cursor: 'pointer', fontWeight: '700', fontSize: '13px', fontFamily: 'inherit' },
+  onboardingBotaoSec: { background: 'transparent', color: '#94a3b8', border: '1px solid #1e293b', borderRadius: '8px', padding: '9px 16px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit' },
+
   header:         { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' },
   titulo:         { color: '#f1f5f9', fontSize: '22px', fontWeight: '700', margin: '0 0 4px', letterSpacing: '-0.3px' },
   subtitulo:      { color: '#64748b', fontSize: '14px' },
@@ -194,6 +271,13 @@ const s = {
   statLabel:      { color: '#64748b', fontSize: '12px' },
   statSeta:       { marginLeft: 'auto' },
   statBarra:      { position: 'absolute', bottom: 0, left: 0, right: 0, height: '2px' },
+
+  // Status do bot
+  botStatus:      { display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#111827', border: '1px solid #1e293b', borderRadius: '10px', padding: '12px 16px', marginBottom: '20px', gap: '12px', flexWrap: 'wrap' },
+  botStatusEsq:   { display: 'flex', alignItems: 'center', gap: '10px' },
+  botDot:         { width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0 },
+  botLabel:       { color: '#64748b', fontSize: '13px' },
+  botProxima:     { color: '#334155', fontSize: '12px' },
 
   // Grid inferior
   gridInferior:   { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' },

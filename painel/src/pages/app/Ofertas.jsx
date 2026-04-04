@@ -32,6 +32,7 @@ export default function Ofertas() {
   const [pagina, setPagina]           = useState(0)
   const [temMais, setTemMais]         = useState(false)
   const [copiado, setCopiado]         = useState(null)
+  const [busca, setBusca]             = useState('')
 
   async function carregarOfertas(novaPagina = 0, append = false) {
     if (append) setLoadingMais(true)
@@ -112,7 +113,10 @@ export default function Ofertas() {
     }, 1500)
   }
 
-  const cfg = STATUS_CONFIG[filtro]
+  const cfg           = STATUS_CONFIG[filtro]
+  const ofertasFiltradas = busca.trim()
+    ? ofertas.filter(o => o.titulo?.toLowerCase().includes(busca.toLowerCase()) || o.loja?.toLowerCase().includes(busca.toLowerCase()))
+    : ofertas
 
   return (
     <div>
@@ -150,6 +154,23 @@ export default function Ofertas() {
         ))}
       </div>
 
+      {/* Busca por texto */}
+      <div style={s.buscaWrap}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input
+          type="text"
+          placeholder="Buscar por título ou loja..."
+          value={busca}
+          onChange={e => setBusca(e.target.value)}
+          style={s.buscaInput}
+        />
+        {busca && (
+          <button onClick={() => setBusca('')} style={s.buscaLimpar}>✕</button>
+        )}
+      </div>
+
       {/* Lista */}
       {loading ? (
         <div style={s.vazioWrap}>
@@ -158,11 +179,19 @@ export default function Ofertas() {
       ) : ofertas.length === 0 ? (
         <div style={s.vazioWrap}>
           <span style={s.vazioIcone}>{cfg.icone}</span>
-          <p style={s.vazioTexto}>Nenhuma oferta {cfg.label.toLowerCase()}.</p>
+          {filtro === 'pendente' && !profile?.shopee_app_id ? (
+            <>
+              <p style={s.vazioTitulo}>Nenhuma oferta ainda</p>
+              <p style={s.vazioTexto}>Configure suas credenciais Shopee para o bot começar a coletar ofertas automaticamente.</p>
+              <a href="#/app/configuracoes" style={s.vazioLink}>Ir para Configurações →</a>
+            </>
+          ) : (
+            <p style={s.vazioTexto}>Nenhuma oferta {cfg.label.toLowerCase()}.</p>
+          )}
         </div>
       ) : (
         <div style={s.grid}>
-          {ofertas.map(oferta => {
+          {ofertasFiltradas.map(oferta => {
             const descPct   = parseFloat(oferta.percentual_desconto) || 0
             const badgeEstilo = badgeDesconto(descPct)
             const emAcao    = acao === oferta.id
@@ -281,10 +310,17 @@ const s = {
   filtros:        { display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' },
   filtroBotao:    { display: 'flex', alignItems: 'center', padding: '8px 16px', borderRadius: '8px', border: '1px solid', cursor: 'pointer', fontWeight: '600', fontSize: '13px', fontFamily: 'inherit', transition: 'all 0.15s' },
 
+  // Busca
+  buscaWrap:      { display: 'flex', alignItems: 'center', gap: '10px', background: '#111827', border: '1px solid #1e293b', borderRadius: '8px', padding: '8px 14px', marginBottom: '20px' },
+  buscaInput:     { flex: 1, background: 'transparent', border: 'none', color: '#e2e8f0', fontSize: '13px', fontFamily: 'inherit', outline: 'none' },
+  buscaLimpar:    { background: 'none', border: 'none', color: '#475569', cursor: 'pointer', fontSize: '14px', padding: '0', lineHeight: 1 },
+
   // Vazio
   vazioWrap:      { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px', gap: '12px' },
   vazioIcone:     { fontSize: '36px' },
-  vazioTexto:     { color: '#475569', fontSize: '14px' },
+  vazioTitulo:    { color: '#94a3b8', fontSize: '15px', fontWeight: '600' },
+  vazioTexto:     { color: '#475569', fontSize: '13px', textAlign: 'center', maxWidth: '300px', lineHeight: '1.6' },
+  vazioLink:      { color: '#6366f1', fontSize: '13px', fontWeight: '600', textDecoration: 'none', marginTop: '4px' },
 
   // Grid
   grid:           { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px' },
