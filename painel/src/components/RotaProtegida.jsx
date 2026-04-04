@@ -2,7 +2,7 @@ import { Navigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function RotaProtegida({ children }) {
-  const { user, loading } = useAuth()
+  const { user, loading, logoutManual } = useAuth()
 
   if (loading) {
     return (
@@ -12,7 +12,13 @@ export default function RotaProtegida({ children }) {
     )
   }
 
-  if (!user) return <Navigate to="/login" replace />
+  if (!user) {
+    if (logoutManual.current) {
+      logoutManual.current = false
+      return <Navigate to="/" replace />
+    }
+    return <Navigate to="/login" state={{ sessaoExpirada: true }} replace />
+  }
 
   return children
 }

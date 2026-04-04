@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { supabase } from '../supabaseClient'
 
 const AuthContext = createContext({})
@@ -9,6 +9,7 @@ export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
+  const logoutManual          = useRef(false)
 
   async function carregarProfile(userId) {
     const { data } = await supabase
@@ -36,6 +37,7 @@ export function AuthProvider({ children }) {
   }, [])
 
   async function signOut() {
+    logoutManual.current = true
     await supabase.auth.signOut()
   }
 
@@ -45,7 +47,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signOut, temAcesso }}>
+    <AuthContext.Provider value={{ user, profile, loading, signOut, temAcesso, logoutManual }}>
       {children}
     </AuthContext.Provider>
   )

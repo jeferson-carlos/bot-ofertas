@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../../supabaseClient'
 
 export default function Login() {
@@ -7,7 +7,9 @@ export default function Login() {
   const [senha, setSenha]     = useState('')
   const [loading, setLoading] = useState(false)
   const [erro, setErro]       = useState('')
-  const navigate = useNavigate()
+  const navigate  = useNavigate()
+  const location  = useLocation()
+  const sessaoExpirada = location.state?.sessaoExpirada
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -29,6 +31,12 @@ export default function Login() {
       <div style={styles.card}>
         <Link to="/" style={styles.logo}>PropagAI</Link>
         <h1 style={styles.titulo}>Entrar na sua conta</h1>
+
+        {sessaoExpirada && (
+          <div style={styles.avisoSessao}>
+            Sua sessão expirou. Por favor, entre novamente.
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
           <label style={styles.label}>E-mail</label>
@@ -77,4 +85,5 @@ const styles = {
   erro:      { color: '#ef4444', fontSize: '13px', marginBottom: '8px' },
   rodape:    { color: '#6b7280', fontSize: '13px', textAlign: 'center', marginTop: '24px' },
   link:      { color: '#6366f1', textDecoration: 'none' },
+  avisoSessao: { background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.3)', color: '#fbbf24', borderRadius: '8px', padding: '10px 14px', fontSize: '13px', marginBottom: '20px' },
 }

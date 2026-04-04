@@ -213,7 +213,7 @@ export default function AppLayout({ children }) {
 }
 
 const s = {
-  container:        { display: 'flex', minHeight: '100vh', background: '#0b0f1a', fontFamily: 'system-ui, sans-serif' },
+  container:        { display: 'flex', height: '100vh', background: '#0b0f1a', fontFamily: 'system-ui, sans-serif' },
 
   sidebar:          { width: '240px', height: '100vh', position: 'sticky', top: 0, background: '#0f1117', borderRight: '1px solid #1e293b', display: 'flex', flexDirection: 'column', flexShrink: 0, overflowY: 'auto' },
   sidebarMobile:    { position: 'fixed', top: 0, left: 0, height: '100vh', zIndex: 200, boxShadow: '4px 0 32px rgba(0,0,0,0.5)' },
