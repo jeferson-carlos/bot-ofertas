@@ -1,4 +1,5 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 
 const PLANO_LABEL = { free: 'Free', pro: 'Pro', premium: 'Premium' }
@@ -44,6 +45,16 @@ const ICONS = {
       <path d="M7 11V7a5 5 0 0110 0v4"/>
     </svg>
   ),
+  hamburger: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  ),
+  fechar: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
+  ),
 }
 
 const MENU = [
@@ -60,7 +71,22 @@ const MENU_INFERIOR = [
 
 export default function AppLayout({ children }) {
   const { user, profile, signOut, temAcesso } = useAuth()
-  const navigate = useNavigate()
+  const navigate  = useNavigate()
+  const location  = useLocation()
+
+  const [largura, setLargura]           = useState(window.innerWidth)
+  const [sidebarAberta, setSidebarAberta] = useState(false)
+
+  useEffect(() => {
+    function onResize() { setLargura(window.innerWidth) }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+
+  // Fechar sidebar ao navegar no mobile
+  useEffect(() => { setSidebarAberta(false) }, [location.pathname])
+
+  const isMobile = largura < 768
 
   async function handleSignOut() {
     await signOut()
@@ -97,55 +123,89 @@ export default function AppLayout({ children }) {
     )
   }
 
-  return (
-    <div style={s.container}>
-      <aside style={s.sidebar}>
+  const sidebar = (
+    <aside style={{ ...s.sidebar, ...(isMobile ? s.sidebarMobile : {}) }}>
 
-        {/* Logo */}
-        <div style={s.logoWrap}>
-          <div style={s.logoMarca}>
-            <div style={s.logoIcone}>P</div>
-            <span style={s.logoTexto}>PropagAI</span>
-          </div>
+      {/* Logo */}
+      <div style={s.logoWrap}>
+        <div style={s.logoMarca}>
+          <div style={s.logoIcone}>P</div>
+          <span style={s.logoTexto}>PropagAI</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ ...s.planoBadge, background: PLANO_COR[plano] + '22', color: PLANO_COR[plano], border: `1px solid ${PLANO_COR[plano]}44` }}>
             {PLANO_LABEL[plano]}
           </span>
-        </div>
-
-        {/* Navegação principal */}
-        <nav style={s.nav}>
-          <p style={s.navLabel}>Menu</p>
-          {MENU.map(renderItem)}
-        </nav>
-
-        {/* Navegação inferior */}
-        <nav style={{ ...s.nav, borderTop: '1px solid #1e293b', paddingTop: '16px', flex: 'none' }}>
-          <p style={s.navLabel}>Conta</p>
-          {MENU_INFERIOR.map(renderItem)}
-        </nav>
-
-        {/* Upgrade banner para free */}
-        {plano === 'free' && (
-          <div style={s.upgradeBanner}>
-            <p style={s.upgradeTexto}>Desbloqueie o plano <strong>Pro</strong> e automatize tudo.</p>
-            <button onClick={() => navigate('/app/planos')} style={s.upgradeBotao}>
-              Ver planos →
+          {isMobile && (
+            <button onClick={() => setSidebarAberta(false)} style={s.fecharBtn}>
+              {ICONS.fechar}
             </button>
-          </div>
-        )}
-
-        {/* Usuário */}
-        <div style={s.userWrap}>
-          <div style={s.userAvatar}>{user?.email?.[0]?.toUpperCase()}</div>
-          <div style={s.userInfo}>
-            <p style={s.userEmail}>{user?.email}</p>
-            <button onClick={handleSignOut} style={s.sairLink}>Sair da conta</button>
-          </div>
+          )}
         </div>
+      </div>
 
-      </aside>
+      {/* Navegação principal */}
+      <nav style={s.nav}>
+        <p style={s.navLabel}>Menu</p>
+        {MENU.map(renderItem)}
+      </nav>
 
-      <main style={s.main}>
+      {/* Navegação inferior */}
+      <nav style={{ ...s.nav, borderTop: '1px solid #1e293b', paddingTop: '16px', flex: 'none' }}>
+        <p style={s.navLabel}>Conta</p>
+        {MENU_INFERIOR.map(renderItem)}
+      </nav>
+
+      {/* Upgrade banner para free */}
+      {plano === 'free' && (
+        <div style={s.upgradeBanner}>
+          <p style={s.upgradeTexto}>Desbloqueie o plano <strong>Pro</strong> e automatize tudo.</p>
+          <button onClick={() => navigate('/app/planos')} style={s.upgradeBotao}>
+            Ver planos →
+          </button>
+        </div>
+      )}
+
+      {/* Usuário */}
+      <div style={s.userWrap}>
+        <div style={s.userAvatar}>{user?.email?.[0]?.toUpperCase()}</div>
+        <div style={s.userInfo}>
+          <p style={s.userEmail}>{user?.email}</p>
+          <button onClick={handleSignOut} style={s.sairLink}>Sair da conta</button>
+        </div>
+      </div>
+
+    </aside>
+  )
+
+  return (
+    <div style={{ ...s.container, flexDirection: isMobile ? 'column' : 'row' }}>
+
+      {/* Topbar mobile */}
+      {isMobile && (
+        <header style={s.topbar}>
+          <div style={s.topbarMarca}>
+            <div style={s.logoIcone}>P</div>
+            <span style={s.logoTexto}>PropagAI</span>
+          </div>
+          <button onClick={() => setSidebarAberta(true)} style={s.hamburgerBtn}>
+            {ICONS.hamburger}
+          </button>
+        </header>
+      )}
+
+      {/* Sidebar desktop — sempre visível */}
+      {!isMobile && sidebar}
+
+      {/* Sidebar mobile — overlay */}
+      {isMobile && sidebarAberta && (
+        <>
+          <div style={s.overlay} onClick={() => setSidebarAberta(false)} />
+          {sidebar}
+        </>
+      )}
+
+      <main style={{ ...s.main, padding: isMobile ? '24px 16px' : '36px 40px' }}>
         {children}
       </main>
     </div>
@@ -156,6 +216,14 @@ const s = {
   container:        { display: 'flex', minHeight: '100vh', background: '#0b0f1a', fontFamily: 'system-ui, sans-serif' },
 
   sidebar:          { width: '240px', height: '100vh', position: 'sticky', top: 0, background: '#0f1117', borderRight: '1px solid #1e293b', display: 'flex', flexDirection: 'column', flexShrink: 0, overflowY: 'auto' },
+  sidebarMobile:    { position: 'fixed', top: 0, left: 0, height: '100vh', zIndex: 200, boxShadow: '4px 0 32px rgba(0,0,0,0.5)' },
+
+  topbar:           { display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#0f1117', borderBottom: '1px solid #1e293b', padding: '0 16px', height: '56px', flexShrink: 0, position: 'sticky', top: 0, zIndex: 100 },
+  topbarMarca:      { display: 'flex', alignItems: 'center', gap: '10px' },
+  hamburgerBtn:     { background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px' },
+  fecharBtn:        { background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', padding: '6px', display: 'flex', alignItems: 'center', borderRadius: '6px' },
+
+  overlay:          { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 199, backdropFilter: 'blur(2px)' },
 
   logoWrap:         { padding: '20px 20px 16px', borderBottom: '1px solid #1e293b', display: 'flex', flexDirection: 'column', gap: '10px' },
   logoMarca:        { display: 'flex', alignItems: 'center', gap: '10px' },
@@ -182,5 +250,5 @@ const s = {
   userEmail:        { color: '#64748b', fontSize: '11px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '2px' },
   sairLink:         { background: 'none', border: 'none', color: '#475569', fontSize: '11px', cursor: 'pointer', padding: 0, fontFamily: 'inherit' },
 
-  main:             { flex: 1, padding: '36px 40px', overflowY: 'auto', minWidth: 0 },
+  main:             { flex: 1, overflowY: 'auto', minWidth: 0 },
 }

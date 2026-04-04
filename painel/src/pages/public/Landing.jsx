@@ -27,7 +27,6 @@ const PLANOS = [
     preco: 'R$ 49',
     precoSub: '/ mês',
     cor: '#6366f1',
-    destaque: true,
     features: [
       'Todas as ofertas coletadas',
       'Até 3 keywords personalizadas',
@@ -44,6 +43,7 @@ const PLANOS = [
     preco: 'R$ 99',
     precoSub: '/ mês',
     cor: '#f59e0b',
+    destaque: true,
     features: [
       'Tudo do plano Pro',
       'Keywords ilimitadas',

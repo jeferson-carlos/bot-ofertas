@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../supabaseClient'
 
@@ -26,7 +26,6 @@ const PLANOS = [
     preco: 'R$ 49',
     per: '/mês',
     cor: '#6366f1',
-    destaque: true,
     descricao: 'Para quem quer automatizar e monetizar',
     features: [
       { ok: true, texto: 'Tudo do Free' },
@@ -44,6 +43,7 @@ const PLANOS = [
     preco: 'R$ 99',
     per: '/mês',
     cor: '#f59e0b',
+    destaque: true,
     descricao: 'Para escalar sem limites',
     features: [
       { ok: true, texto: 'Tudo do Pro' },
@@ -64,6 +64,16 @@ export default function Planos() {
   const [planoSelecionado, setPlanoSelecionado] = useState(null)
   const [salvando, setSalvando]                 = useState(false)
   const [erro, setErro]                         = useState('')
+  const [largura, setLargura]                   = useState(window.innerWidth)
+
+  useEffect(() => {
+    function onResize() { setLargura(window.innerWidth) }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+
+  const isMobile = largura < 640
+  const isTablet = largura < 1024
 
   function selecionar(planoId) {
     if (planoId === planoAtual) return
@@ -114,7 +124,7 @@ export default function Planos() {
       </div>
 
       {/* Grid de planos */}
-      <div style={s.grid}>
+      <div style={{ ...s.grid, gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)' }}>
         {PLANOS.map(plano => {
           const ativo      = plano.id === planoAtual
           const selecionado = plano.id === planoSelecionado
