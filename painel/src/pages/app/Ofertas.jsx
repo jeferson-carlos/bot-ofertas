@@ -33,8 +33,10 @@ export default function Ofertas() {
   const [temMais, setTemMais]         = useState(false)
   const [copiado, setCopiado]         = useState(null)
   const [busca, setBusca]             = useState('')
-  const [selecionados, setSelecionados] = useState(new Set())
+  const [selecionados, setSelecionados]       = useState(new Set())
   const [descartandoLote, setDescartandoLote] = useState(false)
+  const [enviandoLote, setEnviandoLote]       = useState(false)
+  const [progressoLote, setProgressoLote]     = useState(0)
 
   async function carregarOfertas(novaPagina = 0, append = false) {
     if (append) setLoadingMais(true)
@@ -94,6 +96,24 @@ export default function Ofertas() {
       .update({ status: 'descartado' })
       .in('id', Array.from(selecionados))
     setDescartandoLote(false)
+    await carregarOfertas(0)
+  }
+
+  async function enviarSelecionados() {
+    if (selecionados.size === 0) return
+    setEnviandoLote(true)
+    setProgressoLote(0)
+    const ids = Array.from(selecionados)
+    for (let i = 0; i < ids.length; i++) {
+      await fetch(FUNCTION_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_KEY}` },
+        body: JSON.stringify({ id: ids[i], acao: 'enviar' })
+      })
+      setProgressoLote(i + 1)
+    }
+    setEnviandoLote(false)
+    setProgressoLote(0)
     await carregarOfertas(0)
   }
 
@@ -204,10 +224,19 @@ export default function Ofertas() {
         <div style={s.loteBar}>
           <span style={s.loteInfo}>
             <strong style={{ color: '#f1f5f9' }}>{selecionados.size}</strong> oferta{selecionados.size > 1 ? 's' : ''} selecionada{selecionados.size > 1 ? 's' : ''}
+            {enviandoLote && <span style={{ color: '#6366f1', marginLeft: '10px' }}> Enviando {progressoLote}/{selecionados.size}...</span>}
           </span>
           <div style={s.loteBotoes}>
-            <button onClick={limparSelecao} style={s.loteBotaoCancelar}>Cancelar</button>
-            <button onClick={descartarSelecionados} disabled={descartandoLote} style={s.loteBotaoDescartar}>
+            <button onClick={limparSelecao} disabled={enviandoLote || descartandoLote} style={s.loteBotaoCancelar}>Cancelar</button>
+            {plano !== 'free' && (
+              <button onClick={enviarSelecionados} disabled={enviandoLote || descartandoLote} style={s.loteBotaoEnviar}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+                  <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+                {enviandoLote ? `Enviando ${progressoLote}/${selecionados.size}...` : `Enviar ${selecionados.size}`}
+              </button>
+            )}
+            <button onClick={descartarSelecionados} disabled={descartandoLote || enviandoLote} style={s.loteBotaoDescartar}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
                 <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
               </svg>
@@ -359,6 +388,7 @@ const s = {
   loteInfo:         { color: '#94a3b8', fontSize: '13px' },
   loteBotoes:       { display: 'flex', gap: '8px' },
   loteBotaoCancelar:{ background: 'transparent', border: '1px solid #1e293b', color: '#64748b', borderRadius: '8px', padding: '7px 14px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit' },
+  loteBotaoEnviar:  { display: 'flex', alignItems: 'center', background: '#6366f120', border: '1px solid #6366f140', color: '#818cf8', borderRadius: '8px', padding: '7px 14px', cursor: 'pointer', fontWeight: '600', fontSize: '13px', fontFamily: 'inherit' },
   loteBotaoDescartar:{ display: 'flex', alignItems: 'center', background: '#ef444420', border: '1px solid #ef444440', color: '#ef4444', borderRadius: '8px', padding: '7px 14px', cursor: 'pointer', fontWeight: '600', fontSize: '13px', fontFamily: 'inherit' },
 
   vazioWrap:        { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px', gap: '12px' },
