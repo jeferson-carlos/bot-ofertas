@@ -314,6 +314,11 @@ s3_access_key = "env(S3_ACCESS_KEY)"
 # Configures AWS_SECRET_ACCESS_KEY for S3 bucket
 s3_secret_key = "env(S3_SECRET_KEY)"
 
+[functions.diagnostico-shopee]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/diagnostico-shopee/index.ts"
+
 [functions.enviar-oferta]
 enabled = true
 verify_jwt = true
