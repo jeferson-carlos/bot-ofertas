@@ -57,7 +57,8 @@ async function buscarPorKeyword(
         listType: 1,
         sortType: ${sortType},
         page: 1,
-        limit: 50
+        limit: 50,
+        subIds: ["${appId}"]
       ) {
         nodes {
           itemId productName priceMin priceMax

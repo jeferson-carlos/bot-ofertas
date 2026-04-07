@@ -60,6 +60,9 @@ export default function Configuracoes() {
   const [testando, setTestando] = useState(false)
   const [testeOk, setTesteOk]   = useState('')
   const [testeErro, setTesteErro] = useState('')
+  const [testandoShopee, setTestandoShopee] = useState(false)
+  const [testeShopeeOk, setTesteShopeeOk]   = useState('')
+  const [testeShopeeErro, setTesteShopeeErro] = useState('')
 
   useEffect(() => { carregar() }, [])
 
@@ -134,6 +137,28 @@ export default function Configuracoes() {
       setTesteErro(e.message)
     }
     setTestando(false)
+  }
+
+  async function testarShopee() {
+    if (!shopeeOk) { setTesteShopeeErro('Preencha e salve o App ID e o Secret antes de testar.'); return }
+    setTestandoShopee(true); setTesteShopeeOk(''); setTesteShopeeErro('')
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/diagnostico-shopee`,
+        { method: 'POST', headers: { 'Authorization': `Bearer ${session.access_token}` } }
+      )
+      const d = await res.json()
+      if (!d.ok) throw new Error(d.erro || 'Falha ao conectar com a API Shopee')
+      if (d.fonte_credencial === 'global') {
+        setTesteShopeeErro(`Credenciais não encontradas no banco — usando conta global. Salve novamente.`)
+      } else if (!d.offerLink_tem_afiliado) {
+        setTesteShopeeErro(`App ID ${d.app_id_usado} conectou, mas o link não contém rastreio de afiliado. Verifique sua conta Shopee.`)
+      } else {
+        setTesteShopeeOk(`App ID ${d.app_id_usado} OK — link de afiliado válido gerado. Comissão exemplo: ${d.comissao_exemplo}%`)
+      }
+    } catch (e) { setTesteShopeeErro(e.message) }
+    setTestandoShopee(false)
   }
 
   async function salvar(e) {
@@ -339,6 +364,16 @@ export default function Configuracoes() {
                 <p style={s.dica}>Chave secreta gerada junto com o App ID</p>
               </div>
             </div>
+          </div>
+
+          {/* Teste de conexão Shopee */}
+          <div style={s.testeWrap}>
+            <p style={{ ...s.dica, marginBottom: '8px' }}>Salve as configurações antes de testar.</p>
+            <button type="button" onClick={testarShopee} disabled={testandoShopee} style={s.botaoTestar}>
+              {testandoShopee ? 'Testando...' : 'Testar conexão Shopee'}
+            </button>
+            {testeShopeeOk   && <span style={s.testeSucesso}>{testeShopeeOk}</span>}
+            {testeShopeeErro && <span style={s.testeErro}>{testeShopeeErro}</span>}
           </div>
 
           {/* Blacklist */}
