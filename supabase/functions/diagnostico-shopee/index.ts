@@ -91,8 +91,7 @@ Deno.serve(async (req) => {
         listType: 1,
         sortType: 2,
         page: 1,
-        limit: 1,
-        subIds: ["${appId}"]
+        limit: 1
       ) {
         nodes {
           itemId productName priceMin priceMax
