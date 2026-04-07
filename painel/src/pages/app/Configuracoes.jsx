@@ -149,7 +149,7 @@ export default function Configuracoes() {
       if (d.fonte_credencial === 'global') {
         setTesteShopeeErro(`Credenciais não encontradas no banco — usando conta global. Salve novamente.`)
       } else if (!d.offerLink_tem_afiliado) {
-        setTesteShopeeErro(`App ID ${d.app_id_usado} conectou. Link gerado: ${d.offerLink_bruto}`)
+        setTesteShopeeErro(`App ID ${d.app_id_usado} conectou, mas o link não parece ser de afiliado: ${d.offerLink_bruto}`)
       } else {
         setTesteShopeeOk(`App ID ${d.app_id_usado} OK — link de afiliado válido gerado. Comissão exemplo: ${d.comissao_exemplo}%`)
       }

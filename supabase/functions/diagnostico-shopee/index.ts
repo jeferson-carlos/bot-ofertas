@@ -120,7 +120,7 @@ Deno.serve(async (req) => {
     const offerLink = primeiro?.offerLink ?? null
     // Links de afiliado Shopee contêm "smtt" ou "af_siteid" ou "shopee_link_gen" na URL
     const offerLinkTemAfiliado = offerLink
-      ? /smtt=|af_siteid=|_shopee_link_gen=|shp\.ee|shope\.ee/.test(offerLink)
+      ? /s\.shopee\.com\.br|shope\.ee|shp\.ee|smtt=|af_siteid=/.test(offerLink)
       : false
 
     return Response.json(
