@@ -145,7 +145,7 @@ export default function Configuracoes() {
     try {
       const { data: d, error } = await supabase.functions.invoke('diagnostico-shopee')
       if (error) throw new Error(error.message || 'Falha ao conectar com a API Shopee')
-      if (!d.ok) throw new Error(d.erro || 'Falha ao conectar com a API Shopee')
+      if (!d.ok) throw new Error(`${d.erro || 'Falha ao conectar com a API Shopee'} | fonte: ${d.fonte_credencial ?? '?'}, app_id: ${d.app_id_usado ?? '?'}`)
       if (d.fonte_credencial === 'global') {
         setTesteShopeeErro(`Credenciais não encontradas no banco — usando conta global. Salve novamente.`)
       } else if (!d.offerLink_tem_afiliado) {

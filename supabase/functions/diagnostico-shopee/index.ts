@@ -107,8 +107,10 @@ Deno.serve(async (req) => {
     const data = await res.json()
 
     if (data.errors) {
+      const detalhe = JSON.stringify(data.errors)
+      console.error("Erros API Shopee:", detalhe)
       return Response.json(
-        { ok: false, erro: "Erro retornado pela API Shopee", erros_api: data.errors, fonte_credencial: fonteCredencial, app_id_usado: appId },
+        { ok: false, erro: `API Shopee: ${detalhe}`, erros_api: data.errors, fonte_credencial: fonteCredencial, app_id_usado: appId },
         { headers: { ...CORS, "Content-Type": "application/json" } }
       )
     }
