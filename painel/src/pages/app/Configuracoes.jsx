@@ -143,12 +143,8 @@ export default function Configuracoes() {
     if (!shopeeOk) { setTesteShopeeErro('Preencha e salve o App ID e o Secret antes de testar.'); return }
     setTestandoShopee(true); setTesteShopeeOk(''); setTesteShopeeErro('')
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/diagnostico-shopee`,
-        { method: 'POST', headers: { 'Authorization': `Bearer ${session.access_token}` } }
-      )
-      const d = await res.json()
+      const { data: d, error } = await supabase.functions.invoke('diagnostico-shopee')
+      if (error) throw new Error(error.message || 'Falha ao conectar com a API Shopee')
       if (!d.ok) throw new Error(d.erro || 'Falha ao conectar com a API Shopee')
       if (d.fonte_credencial === 'global') {
         setTesteShopeeErro(`Credenciais não encontradas no banco — usando conta global. Salve novamente.`)
