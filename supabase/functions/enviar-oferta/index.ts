@@ -1,9 +1,5 @@
 import { createClient } from "jsr:@supabase/supabase-js@2"
 
-// Credenciais globais (fallback quando usuário não configurou as próprias)
-const TELEGRAM_TOKEN_GLOBAL   = Deno.env.get("TELEGRAM_TOKEN") ?? ""
-const TELEGRAM_CHAT_ID_GLOBAL = Deno.env.get("TELEGRAM_CHANNEL_ID") ?? ""
-
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -117,9 +113,9 @@ Deno.serve(async (req) => {
     return Response.json({ ok: false, erro: "Oferta já enviada" }, { status: 400, headers: CORS })
   }
 
-  // Resolve credenciais Telegram e template: usa as do usuário, ou fallback global
-  let botToken = TELEGRAM_TOKEN_GLOBAL
-  let chatId   = TELEGRAM_CHAT_ID_GLOBAL
+  // Resolve credenciais Telegram e template: usa apenas as do usuário
+  let botToken: string | null = null
+  let chatId: string | null = null
   let template: string | null = null
 
   if (oferta.user_id) {
@@ -129,9 +125,9 @@ Deno.serve(async (req) => {
       .eq("id", oferta.user_id)
       .single()
 
-    if (perfil?.telegram_bot_token) botToken = perfil.telegram_bot_token
-    if (perfil?.telegram_chat_id)   chatId   = perfil.telegram_chat_id
-    if (perfil?.telegram_template)  template = perfil.telegram_template
+    botToken = perfil?.telegram_bot_token ?? null
+    chatId   = perfil?.telegram_chat_id   ?? null
+    template = perfil?.telegram_template  ?? null
   }
 
   if (!botToken || !chatId) {

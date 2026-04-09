@@ -1,9 +1,6 @@
 import { createClient } from "jsr:@supabase/supabase-js@2"
 
-// Credenciais globais (fallback quando usuário não configurou as próprias)
-const SHOPEE_APP_ID_GLOBAL = Deno.env.get("SHOPEE_APP_ID") ?? ""
-const SHOPEE_SECRET_GLOBAL = Deno.env.get("SHOPEE_SECRET") ?? ""
-const BASE_URL             = "https://open-api.affiliate.shopee.com.br/graphql"
+const BASE_URL = "https://open-api.affiliate.shopee.com.br/graphql"
 const DESCONTO_MIN         = 10
 
 const supabase = createClient(
@@ -230,8 +227,8 @@ Deno.serve(async (req) => {
         )
       }
 
-      const appId  = perfil?.shopee_app_id  || SHOPEE_APP_ID_GLOBAL
-      const secret = perfil?.shopee_secret   || SHOPEE_SECRET_GLOBAL
+      const appId  = perfil?.shopee_app_id
+      const secret = perfil?.shopee_secret
 
       if (!appId || !secret) {
         return Response.json(
@@ -270,29 +267,7 @@ Deno.serve(async (req) => {
         totalDuplicatas += duplicatas
       }
     } else {
-      // Fallback: usa credenciais globais sem user_id (comportamento legado)
-      console.log("⚠️  Nenhum usuário com credenciais — usando credenciais globais")
-      if (SHOPEE_APP_ID_GLOBAL && SHOPEE_SECRET_GLOBAL) {
-        const { data: keywords } = await supabase
-          .from("keywords")
-          .select("keyword, sort_type")
-          .eq("ativo", true)
-
-        const lista = keywords && keywords.length > 0
-          ? keywords
-          : [{ keyword: "oferta", sort_type: 2 }]
-
-        const unique = Object.values(
-          lista.reduce((acc: any, k: any) => ({ ...acc, [k.keyword]: k }), {})
-        ) as { keyword: string; sort_type: number }[]
-
-        for (const { keyword, sort_type } of unique) {
-          const ofertas = await buscarPorKeyword(keyword, sort_type ?? 2, SHOPEE_APP_ID_GLOBAL, SHOPEE_SECRET_GLOBAL)
-          const { novos, duplicatas } = await salvarOfertas(ofertas, null)
-          totalNovos      += novos
-          totalDuplicatas += duplicatas
-        }
-      }
+      console.log("ℹ️  Nenhum usuário com credenciais Shopee configuradas — nada a processar.")
     }
 
     return Response.json(
