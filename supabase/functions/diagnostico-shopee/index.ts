@@ -130,7 +130,7 @@ Deno.serve(async (req) => {
         app_id_usado: appId,
         offerLink_bruto: offerLink,
         offerLink_tem_afiliado: offerLinkTemAfiliado,
-        comissao_exemplo: primeiro?.commissionRate ?? null,
+        comissao_exemplo: primeiro?.commissionRate != null ? parseFloat(primeiro.commissionRate) * 100 : null,
         produto_exemplo: primeiro ? { itemId: primeiro.itemId, productName: primeiro.productName } : null,
         erros_api: null,
       },
