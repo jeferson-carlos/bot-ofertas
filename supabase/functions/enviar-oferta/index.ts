@@ -1,5 +1,7 @@
 import { createClient } from "jsr:@supabase/supabase-js@2"
 
+const SHOPEE_BASE_URL = "https://open-api.affiliate.shopee.com.br/graphql"
+
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -12,6 +14,39 @@ function getUserIdFromJWT(authHeader: string): string | null {
     const decoded = JSON.parse(atob(payload))
     return decoded.sub ?? null
   } catch {
+    return null
+  }
+}
+
+async function sha256hex(text: string): Promise<string> {
+  const data   = new TextEncoder().encode(text)
+  const buffer = await crypto.subtle.digest("SHA-256", data)
+  return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, "0")).join("")
+}
+
+async function getShopeeHeaders(appId: string, secret: string, payload: string) {
+  const timestamp  = String(Math.floor(Date.now() / 1000))
+  const assinatura = await sha256hex(`${appId}${timestamp}${payload}${secret}`)
+  return {
+    "Content-Type": "application/json",
+    "Authorization": `SHA256 Credential=${appId}, Timestamp=${timestamp}, Signature=${assinatura}`
+  }
+}
+
+async function gerarLinkRastreavel(originUrl: string, appId: string, secret: string): Promise<string | null> {
+  const payload = JSON.stringify({
+    query: `mutation { generateShortLink(input: { originUrl: "${originUrl}", subIds: [] }) { shortLink } }`
+  })
+
+  try {
+    const res  = await fetch(SHOPEE_BASE_URL, { method: "POST", headers: await getShopeeHeaders(appId, secret, payload), body: payload })
+    const data = await res.json()
+    const shortLink = data?.data?.generateShortLink?.shortLink ?? null
+    if (shortLink) console.log(`Link rastreável gerado: ${shortLink}`)
+    else console.warn("generateShortLink não retornou link:", JSON.stringify(data))
+    return shortLink
+  } catch (e) {
+    console.warn("Erro ao gerar link rastreável:", (e as Error).message)
     return null
   }
 }
@@ -118,16 +153,21 @@ Deno.serve(async (req) => {
   let chatId: string | null = null
   let template: string | null = null
 
+  let shopeeAppId: string | null = null
+  let shopeeSecret: string | null = null
+
   if (oferta.user_id) {
     const { data: perfil } = await supabase
       .from("profiles")
-      .select("telegram_bot_token, telegram_chat_id, telegram_template")
+      .select("telegram_bot_token, telegram_chat_id, telegram_template, shopee_app_id, shopee_secret")
       .eq("id", oferta.user_id)
       .single()
 
-    botToken = perfil?.telegram_bot_token ?? null
-    chatId   = perfil?.telegram_chat_id   ?? null
-    template = perfil?.telegram_template  ?? null
+    botToken    = perfil?.telegram_bot_token ?? null
+    chatId      = perfil?.telegram_chat_id   ?? null
+    template    = perfil?.telegram_template  ?? null
+    shopeeAppId = perfil?.shopee_app_id      ?? null
+    shopeeSecret = perfil?.shopee_secret     ?? null
   }
 
   if (!botToken || !chatId) {
@@ -137,7 +177,31 @@ Deno.serve(async (req) => {
     )
   }
 
-  const sucesso = await enviarTelegram(oferta, botToken, chatId, template)
+  // Gera link rastreável fresh via generateShortLink — obrigatório para rastreamento de cliques
+  if (!shopeeAppId || !shopeeSecret) {
+    return Response.json(
+      { ok: false, erro: "Credenciais Shopee não configuradas. Acesse Configurações para adicionar." },
+      { status: 400, headers: CORS }
+    )
+  }
+
+  if (!oferta.link_afiliado) {
+    return Response.json(
+      { ok: false, erro: "Oferta sem link de afiliado. Não é possível enviar." },
+      { status: 400, headers: CORS }
+    )
+  }
+
+  const linkFinal = await gerarLinkRastreavel(oferta.link_afiliado, shopeeAppId, shopeeSecret)
+  if (!linkFinal) {
+    return Response.json(
+      { ok: false, erro: "Falha ao obter o link curto da Shopee. Verifique suas credenciais e tente novamente." },
+      { status: 502, headers: CORS }
+    )
+  }
+
+  const ofertaComLink = { ...oferta, link_afiliado: linkFinal }
+  const sucesso = await enviarTelegram(ofertaComLink, botToken, chatId, template)
 
   if (!sucesso) {
     return Response.json({ ok: false, erro: "Falha ao enviar no Telegram. Verifique as credenciais em Configurações." }, { status: 500, headers: CORS })
