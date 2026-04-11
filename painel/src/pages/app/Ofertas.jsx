@@ -326,7 +326,7 @@ export default function Ofertas() {
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
                       </svg>
-                      <span style={s.comissaoTexto}>{parseFloat(oferta.comissao).toFixed(2)}% comissão</span>
+                      <span style={s.comissaoTexto}>{parseFloat(oferta.comissao).toFixed(0)}% comissão</span>
                     </div>
                   )}
                 </div>
