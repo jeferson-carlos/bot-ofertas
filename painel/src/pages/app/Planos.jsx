@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../supabaseClient'
+import { color, shadow, radius, borda, transition } from '../../theme'
 
 const PLANOS = [
   {
@@ -8,7 +9,7 @@ const PLANOS = [
     nome: 'Free',
     preco: 'R$ 0',
     per: '',
-    cor: '#64748b',
+    cor: color.planFree,
     descricao: 'Para explorar o sistema sem compromisso',
     features: [
       { ok: true,  texto: 'Painel de ofertas' },
@@ -25,7 +26,7 @@ const PLANOS = [
     nome: 'Pro',
     preco: 'R$ 49',
     per: '/mês',
-    cor: '#6366f1',
+    cor: color.planPro,
     descricao: 'Para quem quer automatizar e monetizar',
     features: [
       { ok: true, texto: 'Tudo do Free' },
@@ -42,7 +43,7 @@ const PLANOS = [
     nome: 'Premium',
     preco: 'R$ 99',
     per: '/mês',
-    cor: '#f59e0b',
+    cor: color.planPremium,
     destaque: true,
     descricao: 'Para escalar sem limites',
     features: [
@@ -113,7 +114,6 @@ export default function Planos() {
   return (
     <div style={s.pagina}>
 
-      {/* Hero */}
       <div style={s.hero}>
         <div style={s.heroBadge}>
           <span style={s.heroBadgeDot} />
@@ -125,10 +125,9 @@ export default function Planos() {
         </p>
       </div>
 
-      {/* Grid de planos */}
       <div style={{ ...s.grid, gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)' }}>
         {PLANOS.map(plano => {
-          const ativo      = plano.id === planoAtual
+          const ativo       = plano.id === planoAtual
           const selecionado = plano.id === planoSelecionado
           return (
             <div
@@ -137,25 +136,24 @@ export default function Planos() {
                 ...s.card,
                 ...(plano.destaque ? s.cardDestaque : {}),
                 borderColor: selecionado ? plano.cor
-                           : ativo       ? plano.cor + '55'
-                           : plano.destaque ? '#6366f133' : '#1e293b',
-                background:  selecionado ? plano.cor + '10'
-                           : plano.destaque ? 'linear-gradient(160deg, #13183a 0%, #111827 100%)'
-                           : '#111827',
+                           : ativo       ? plano.cor + '66'
+                           : plano.destaque ? color.primaryBorder : color.border,
+                background:  selecionado ? plano.cor + '15'
+                           : plano.destaque ? `linear-gradient(160deg, #0f1628 0%, ${color.card} 100%)`
+                           : color.card,
               }}
             >
-              {/* Tag topo */}
               {(plano.destaque || ativo) && (
                 <div style={{
                   ...s.tag,
-                  background: ativo ? '#1e293b' : plano.cor,
-                  color:      ativo ? '#64748b' : '#fff',
+                  background: ativo ? color.hover : plano.cor,
+                  color:      ativo ? color.textMuted : color.white,
+                  border:     ativo ? borda.base : 'none',
                 }}>
                   {ativo ? '✓ Plano atual' : '⭐ Mais popular'}
                 </div>
               )}
 
-              {/* Cabeçalho */}
               <div style={s.cardHead}>
                 <p style={{ ...s.planNome, color: plano.cor }}>{plano.nome}</p>
                 <div style={s.precoWrap}>
@@ -165,40 +163,40 @@ export default function Planos() {
                 <p style={s.planDesc}>{plano.descricao}</p>
               </div>
 
-              {/* Separador */}
-              <div style={{ ...s.separador, background: ativo ? plano.cor + '33' : '#1e293b' }} />
+              <div style={{ ...s.separador, background: ativo ? plano.cor + '44' : color.border }} />
 
-              {/* Features */}
               <ul style={s.features}>
                 {plano.features.map((f, i) => (
                   <li key={i} style={s.featureItem}>
-                    <span style={{ ...s.featureIcone, color: f.ok ? '#22c55e' : '#334155' }}>
+                    <span style={{ ...s.featureIcone, color: f.ok ? color.success : color.textDisabled }}>
                       {f.ok
                         ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                         : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                       }
                     </span>
-                    <span style={{ color: f.ok ? '#cbd5e1' : '#334155', fontSize: '13px' }}>{f.texto}</span>
+                    <span style={{ color: f.ok ? color.textSecondary : color.textDisabled, fontSize: '13px' }}>{f.texto}</span>
                   </li>
                 ))}
               </ul>
 
-              {/* Botão */}
               <button
                 onClick={() => selecionar(plano.id)}
                 disabled={ativo}
                 style={{
                   ...s.botao,
-                  background: ativo      ? '#1e293b'
-                            : selecionado ? plano.cor
+                  background: ativo       ? color.hover
+                            : selecionado  ? plano.cor
                             : plano.destaque ? plano.cor : 'transparent',
-                  color:      ativo      ? '#475569'
-                            : selecionado || plano.destaque ? '#fff' : plano.cor,
-                  border:     `1.5px solid ${ativo ? '#1e293b' : plano.cor}`,
+                  color:      ativo       ? color.textDisabled
+                            : selecionado || plano.destaque ? color.white : plano.cor,
+                  border:     `1.5px solid ${ativo ? color.border : plano.cor}`,
                   cursor:     ativo ? 'default' : 'pointer',
+                  boxShadow:  selecionado || plano.destaque
+                              ? plano.cor === color.planPremium ? shadow.premium : shadow.primary
+                              : 'none',
                 }}
               >
-                {ativo       ? 'Plano atual'
+                {ativo        ? 'Plano atual'
                 : selecionado ? '✓ Selecionado — confirmar abaixo'
                 :               `Assinar ${plano.nome}`}
               </button>
@@ -207,14 +205,13 @@ export default function Planos() {
         })}
       </div>
 
-      {/* Painel de confirmação */}
       {planoSelecionado && planoSelecionado !== planoAtual && (
         <div ref={confirmacaoRef} style={s.confirmacaoBox}>
           <div style={s.confirmacaoInner}>
             <div style={s.confirmacaoIcone}>🚀</div>
             <div style={s.confirmacaoTextos}>
               <p style={s.confirmacaoTitulo}>
-                Assinar plano <strong style={{ color: '#6366f1' }}>
+                Assinar plano <strong style={{ color: color.primary }}>
                   {PLANOS.find(p => p.id === planoSelecionado)?.nome}
                 </strong>
               </p>
@@ -225,7 +222,7 @@ export default function Planos() {
             </div>
             <div style={s.confirmacaoBotoes}>
               <button onClick={() => setPlanoSelecionado(null)} style={s.botaoCancelar}>Cancelar</button>
-              <button onClick={confirmarAssinatura} disabled={salvando} style={s.botaoConfirmar}>
+              <button onClick={confirmarAssinatura} disabled={salvando} style={salvando ? s.botaoConfirmarDisabled : s.botaoConfirmar}>
                 {salvando ? 'Processando...' : 'Confirmar →'}
               </button>
             </div>
@@ -233,83 +230,75 @@ export default function Planos() {
         </div>
       )}
 
-      {/* Rodapé */}
       <div style={s.rodape}>
-        <div style={s.rodapeItem}>
-          <span style={s.rodapeIcone}>🔒</span>
-          <span style={s.rodapeTexto}>Acesso imediato após confirmação</span>
-        </div>
-        <div style={s.rodapeItem}>
-          <span style={s.rodapeIcone}>💬</span>
-          <span style={s.rodapeTexto}>Suporte via Telegram</span>
-        </div>
-        <div style={s.rodapeItem}>
-          <span style={s.rodapeIcone}>⚡</span>
-          <span style={s.rodapeTexto}>Cancele quando quiser</span>
-        </div>
+        {[
+          { icone: '🔒', texto: 'Acesso imediato após confirmação' },
+          { icone: '💬', texto: 'Suporte via Telegram' },
+          { icone: '⚡', texto: 'Cancele quando quiser' },
+        ].map(({ icone, texto }) => (
+          <div key={texto} style={s.rodapeItem}>
+            <span style={s.rodapeIcone}>{icone}</span>
+            <span style={s.rodapeTexto}>{texto}</span>
+          </div>
+        ))}
       </div>
 
       <p style={s.nota}>* Sistema em fase beta. O acesso é liberado manualmente pela nossa equipe após o contato.</p>
-
-      {/* Modal overlay de confirmação em mobile */}
-      {planoSelecionado && planoSelecionado !== planoAtual && <div style={s.overlay} onClick={() => setPlanoSelecionado(null)} />}
     </div>
   )
 }
 
 const s = {
-  pagina:           { display: 'flex', flexDirection: 'column', minHeight: '100%' },
+  pagina: { display: 'flex', flexDirection: 'column', minHeight: '100%' },
 
-  // Hero
-  hero:             { textAlign: 'center', paddingBottom: '40px', paddingTop: '8px' },
-  heroBadge:        { display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#1e293b', border: '1px solid #334155', borderRadius: '100px', padding: '6px 16px', fontSize: '13px', color: '#94a3b8', marginBottom: '20px' },
-  heroBadgeDot:     { width: '7px', height: '7px', borderRadius: '50%', background: '#22c55e', flexShrink: 0 },
-  heroTitulo:       { color: '#f1f5f9', fontSize: '28px', fontWeight: '800', letterSpacing: '-0.5px', marginBottom: '12px' },
-  heroSub:          { color: '#64748b', fontSize: '14px', maxWidth: '500px', margin: '0 auto', lineHeight: '1.7' },
+  hero:        { textAlign: 'center', paddingBottom: '40px', paddingTop: '8px' },
+  heroBadge:   { display: 'inline-flex', alignItems: 'center', gap: '8px', background: color.card, border: borda.base, borderRadius: '100px', padding: '6px 16px', fontSize: '13px', color: color.textSecondary, marginBottom: '20px', boxShadow: shadow.card },
+  heroBadgeDot:{ width: '7px', height: '7px', borderRadius: '50%', background: color.success, flexShrink: 0 },
+  heroTitulo:  { color: color.textPrimary, fontSize: '28px', fontWeight: '800', letterSpacing: '-0.5px', marginBottom: '12px' },
+  heroSub:     { color: color.textMuted, fontSize: '14px', maxWidth: '500px', margin: '0 auto', lineHeight: '1.7' },
 
-  // Grid
-  grid:             { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', alignItems: 'stretch', marginBottom: '28px' },
+  grid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', alignItems: 'stretch', marginBottom: '28px' },
 
-  // Card
-  card:             { position: 'relative', borderRadius: '16px', border: '1px solid', padding: '28px 24px 24px', display: 'flex', flexDirection: 'column', gap: '0', transition: 'border-color 0.2s' },
-  cardDestaque:     { boxShadow: '0 0 0 1px rgba(99,102,241,0.2), 0 20px 40px rgba(99,102,241,0.08)' },
+  card: {
+    position: 'relative', borderRadius: radius.xl, border: '1px solid',
+    padding: '28px 24px 24px', display: 'flex', flexDirection: 'column',
+    transition: transition.normal, boxShadow: shadow.card,
+  },
+  cardDestaque: { boxShadow: `0 0 0 1px ${color.primaryBorder}, 0 20px 40px rgba(99,102,241,0.12)` },
 
-  tag:              { display: 'inline-flex', alignSelf: 'flex-start', fontSize: '11px', fontWeight: '700', padding: '4px 12px', borderRadius: '100px', marginBottom: '20px', letterSpacing: '0.2px' },
+  tag: { display: 'inline-flex', alignSelf: 'flex-start', fontSize: '11px', fontWeight: '700', padding: '4px 12px', borderRadius: '100px', marginBottom: '20px', letterSpacing: '0.2px' },
 
-  cardHead:         { marginBottom: '20px' },
-  planNome:         { fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: '12px' },
-  precoWrap:        { display: 'flex', alignItems: 'baseline', gap: '4px', marginBottom: '8px' },
-  preco:            { color: '#f1f5f9', fontSize: '36px', fontWeight: '800', letterSpacing: '-1.5px' },
-  per:              { color: '#64748b', fontSize: '14px' },
-  planDesc:         { color: '#64748b', fontSize: '12px', lineHeight: '1.5' },
+  cardHead:    { marginBottom: '20px' },
+  planNome:    { fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: '12px' },
+  precoWrap:   { display: 'flex', alignItems: 'baseline', gap: '4px', marginBottom: '8px' },
+  preco:       { color: color.textPrimary, fontSize: '36px', fontWeight: '800', letterSpacing: '-1.5px' },
+  per:         { color: color.textMuted, fontSize: '14px' },
+  planDesc:    { color: color.textMuted, fontSize: '12px', lineHeight: '1.5' },
 
-  separador:        { height: '1px', marginBottom: '20px' },
+  separador: { height: '1px', marginBottom: '20px' },
 
-  features:         { display: 'flex', flexDirection: 'column', gap: '11px', marginBottom: '24px', flex: 1 },
-  featureItem:      { display: 'flex', alignItems: 'flex-start', gap: '10px' },
-  featureIcone:     { flexShrink: 0, marginTop: '1px', display: 'flex' },
+  features:     { display: 'flex', flexDirection: 'column', gap: '11px', marginBottom: '24px', flex: 1 },
+  featureItem:  { display: 'flex', alignItems: 'flex-start', gap: '10px' },
+  featureIcone: { flexShrink: 0, marginTop: '1px', display: 'flex' },
 
-  botao:            { width: '100%', padding: '13px', borderRadius: '10px', fontWeight: '700', fontSize: '13px', fontFamily: 'inherit', transition: 'opacity 0.15s', marginTop: 'auto' },
+  botao: { width: '100%', padding: '13px', borderRadius: radius.md, fontWeight: '700', fontSize: '13px', fontFamily: 'inherit', transition: transition.fast, marginTop: 'auto' },
 
-  // Confirmação inline
-  confirmacaoBox:   { position: 'relative', zIndex: 10, background: '#111827', border: '1px solid #6366f133', borderRadius: '14px', padding: '20px 24px', marginBottom: '24px', boxShadow: '0 8px 32px rgba(99,102,241,0.1)' },
-  confirmacaoInner: { display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' },
-  confirmacaoIcone: { fontSize: '32px', flexShrink: 0 },
-  confirmacaoTextos:{ flex: 1, minWidth: '200px' },
-  confirmacaoTitulo:{ color: '#f1f5f9', fontSize: '15px', fontWeight: '600', marginBottom: '4px' },
-  confirmacaoSub:   { color: '#64748b', fontSize: '12px', lineHeight: '1.5' },
-  erroTexto:        { color: '#ef4444', fontSize: '12px', marginTop: '6px' },
-  confirmacaoBotoes:{ display: 'flex', gap: '10px', flexShrink: 0 },
-  botaoCancelar:    { padding: '10px 18px', background: 'transparent', border: '1px solid #1e293b', color: '#64748b', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit' },
-  botaoConfirmar:   { padding: '10px 20px', background: '#6366f1', border: 'none', color: '#fff', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '13px', fontFamily: 'inherit' },
+  confirmacaoBox:    { position: 'relative', zIndex: 10, background: color.card, border: borda.primary, borderRadius: radius.lg, padding: '20px 24px', marginBottom: '24px', boxShadow: shadow.elevated },
+  confirmacaoInner:  { display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' },
+  confirmacaoIcone:  { fontSize: '32px', flexShrink: 0 },
+  confirmacaoTextos: { flex: 1, minWidth: '200px' },
+  confirmacaoTitulo: { color: color.textPrimary, fontSize: '15px', fontWeight: '600', marginBottom: '4px' },
+  confirmacaoSub:    { color: color.textMuted, fontSize: '12px', lineHeight: '1.5' },
+  erroTexto:         { color: color.danger, fontSize: '12px', marginTop: '6px' },
+  confirmacaoBotoes: { display: 'flex', gap: '10px', flexShrink: 0 },
+  botaoCancelar:     { padding: '10px 18px', background: 'transparent', border: borda.base, color: color.textMuted, borderRadius: radius.md, cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit', transition: transition.fast },
+  botaoConfirmar:    { padding: '10px 20px', background: color.primary, border: 'none', color: color.white, borderRadius: radius.md, cursor: 'pointer', fontWeight: '700', fontSize: '13px', fontFamily: 'inherit', boxShadow: shadow.primary, transition: transition.fast },
+  botaoConfirmarDisabled: { padding: '10px 20px', background: color.hover, border: `1px solid #1a2432`, color: color.textDisabled, borderRadius: radius.md, cursor: 'not-allowed', fontWeight: '700', fontSize: '13px', fontFamily: 'inherit' },
 
-  overlay:          { display: 'none' },
+  rodape:      { display: 'flex', justifyContent: 'center', gap: '40px', flexWrap: 'wrap', padding: '20px 0', borderTop: borda.base, borderBottom: borda.base, marginBottom: '20px' },
+  rodapeItem:  { display: 'flex', alignItems: 'center', gap: '8px' },
+  rodapeIcone: { fontSize: '16px' },
+  rodapeTexto: { color: color.textMuted, fontSize: '13px' },
 
-  // Rodapé
-  rodape:           { display: 'flex', justifyContent: 'center', gap: '40px', flexWrap: 'wrap', padding: '20px 0', borderTop: '1px solid #1e293b', borderBottom: '1px solid #1e293b', marginBottom: '20px' },
-  rodapeItem:       { display: 'flex', alignItems: 'center', gap: '8px' },
-  rodapeIcone:      { fontSize: '16px' },
-  rodapeTexto:      { color: '#475569', fontSize: '13px' },
-
-  nota:             { color: '#334155', fontSize: '11px', textAlign: 'center' },
+  nota: { color: color.textDisabled, fontSize: '11px', textAlign: 'center' },
 }

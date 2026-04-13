@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient'
 import { useAuth } from '../../contexts/AuthContext'
 import FeatureBloqueada from '../../components/FeatureBloqueada'
+import { color, shadow, radius, borda, transition } from '../../theme'
 
 const BUSCAR_URL = import.meta.env.VITE_SUPABASE_URL + '/functions/v1/buscar-ofertas'
 
@@ -125,8 +126,8 @@ export default function Keywords() {
           <div style={s.listaFake}>
             {['tênis nike', 'fone bluetooth', 'smartwatch'].map(k => (
               <div key={k} style={s.itemFake}>
-                <span style={{ color: '#94a3b8', fontWeight: '500' }}>{k}</span>
-                <span style={{ color: '#22c55e', fontSize: '11px', fontWeight: '600' }}>● ativo</span>
+                <span style={{ color: color.textSecondary, fontWeight: '500' }}>{k}</span>
+                <span style={{ color: color.success, fontSize: '11px', fontWeight: '600' }}>● ativo</span>
               </div>
             ))}
           </div>
@@ -144,19 +145,17 @@ export default function Keywords() {
   return (
     <div>
 
-      {/* Header */}
       <div style={s.header}>
         <div>
           <h1 style={s.titulo}>Keywords</h1>
           <p style={s.sub}>Busca automática a cada hora • {keywords.length}/{limiteStr} keywords</p>
         </div>
 
-        {/* Bloco buscar */}
         <div style={s.buscarBloco}>
           <button
             onClick={buscarAgora}
             disabled={!podeBuscar}
-            style={{ ...s.botaoBuscar, opacity: podeBuscar ? 1 : 0.5 }}
+            style={podeBuscar ? s.botaoBuscar : s.botaoBuscarDisabled}
           >
             {buscando ? (
               <>
@@ -181,10 +180,9 @@ export default function Keywords() {
         </div>
       </div>
 
-      {/* Feedback */}
       {resultado && (
         <div style={s.resultadoBox}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color.success} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
             <polyline points="20 6 9 17 4 12"/>
           </svg>
           <span>Busca concluída — <strong>{resultado.novos}</strong> novas ofertas encontradas{resultado.duplicatas > 0 ? `, ${resultado.duplicatas} já existiam` : ''}.</span>
@@ -192,14 +190,13 @@ export default function Keywords() {
       )}
       {erro && (
         <div style={s.erroBox}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color.danger} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
             <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
           <span>{erro}</span>
         </div>
       )}
 
-      {/* Form adicionar */}
       <div style={s.formBloco}>
         <form onSubmit={adicionarKeyword} style={s.form}>
           <input
@@ -208,13 +205,13 @@ export default function Keywords() {
             value={novaKeyword}
             onChange={e => setNova(e.target.value)}
             disabled={keywords.length >= limite}
-            style={{ ...s.input, opacity: keywords.length >= limite ? 0.5 : 1 }}
+            style={keywords.length >= limite ? s.inputDisabled : s.input}
           />
           <select
             value={novoSort}
             onChange={e => setNovoSort(Number(e.target.value))}
             disabled={keywords.length >= limite}
-            style={{ ...s.select, opacity: keywords.length >= limite ? 0.5 : 1 }}
+            style={keywords.length >= limite ? s.selectDisabled : s.select}
           >
             {SORT_OPTIONS.map(o => (
               <option key={o.value} value={o.value}>{o.label}</option>
@@ -223,7 +220,7 @@ export default function Keywords() {
           <button
             type="submit"
             disabled={salvando || keywords.length >= limite || !novaKeyword.trim()}
-            style={{ ...s.botaoAdicionar, opacity: (salvando || keywords.length >= limite || !novaKeyword.trim()) ? 0.5 : 1 }}
+            style={(salvando || keywords.length >= limite || !novaKeyword.trim()) ? s.botaoAdicionarDisabled : s.botaoAdicionar}
           >
             {salvando ? 'Salvando...' : '+ Adicionar'}
           </button>
@@ -233,7 +230,6 @@ export default function Keywords() {
         )}
       </div>
 
-      {/* Lista */}
       {loading ? (
         <div style={s.vazioWrap}>
           <p style={s.vazioTexto}>Carregando...</p>
@@ -241,7 +237,7 @@ export default function Keywords() {
       ) : keywords.length === 0 ? (
         <div style={s.vazioWrap}>
           <div style={s.vazioIconeWrap}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#334155" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={color.textDisabled} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
           </div>
@@ -254,21 +250,27 @@ export default function Keywords() {
             const sortLabel = SORT_OPTIONS.find(o => o.value === (kw.sort_type ?? 2))?.label
             return (
               <div key={kw.id} style={s.item}>
-                {/* Status indicator */}
-                <div style={{ ...s.statusDot, background: kw.ativo ? '#22c55e' : '#334155' }} />
+                <div style={{ ...s.statusDot, background: kw.ativo ? color.success : color.border }} />
 
                 <div style={s.itemCorpo}>
                   <p style={s.itemKeyword}>{kw.keyword}</p>
                   <div style={s.itemMeta}>
                     <span style={s.metaPill}>{sortLabel}</span>
-                    <span style={{ ...s.metaStatus, color: kw.ativo ? '#22c55e' : '#475569' }}>
+                    <span style={{ ...s.metaStatus, color: kw.ativo ? color.success : color.textMuted }}>
                       {kw.ativo ? 'ativo' : 'pausado'}
                     </span>
                   </div>
                 </div>
 
                 <div style={s.itemAcoes}>
-                  <button onClick={() => toggleAtivo(kw)} style={{ ...s.botaoToggle, color: kw.ativo ? '#f59e0b' : '#22c55e', borderColor: kw.ativo ? '#f59e0b44' : '#22c55e44' }}>
+                  <button
+                    onClick={() => toggleAtivo(kw)}
+                    style={{
+                      ...s.botaoToggle,
+                      color: kw.ativo ? color.warning : color.success,
+                      borderColor: kw.ativo ? color.warning + '55' : color.success + '55',
+                    }}
+                  >
                     {kw.ativo ? 'Pausar' : 'Ativar'}
                   </button>
                   <button onClick={() => remover(kw.id)} style={s.botaoRemover} title="Remover">
@@ -287,52 +289,62 @@ export default function Keywords() {
 }
 
 const s = {
-  // Header
-  header:         { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '28px', flexWrap: 'wrap', gap: '16px' },
-  titulo:         { color: '#f1f5f9', fontSize: '22px', fontWeight: '700', margin: '0 0 4px', letterSpacing: '-0.3px' },
-  sub:            { color: '#64748b', fontSize: '13px' },
+  header:  { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '28px', flexWrap: 'wrap', gap: '16px' },
+  titulo:  { color: color.textPrimary, fontSize: '22px', fontWeight: '700', margin: '0 0 4px', letterSpacing: '-0.3px' },
+  sub:     { color: color.textMuted, fontSize: '13px' },
 
-  // Buscar bloco
-  buscarBloco:    { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' },
-  botaoBuscar:    { display: 'flex', alignItems: 'center', background: '#6366f1', color: '#fff', border: 'none', borderRadius: '10px', padding: '11px 18px', cursor: 'pointer', fontWeight: '700', fontSize: '13px', fontFamily: 'inherit', transition: 'opacity 0.15s' },
-  spinner:        { width: '12px', height: '12px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', marginRight: '8px', animation: 'spin 0.8s linear infinite' },
-  contadorWrap:   { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', width: '140px' },
-  barraFundo:     { width: '100%', height: '3px', background: '#1e293b', borderRadius: '2px', overflow: 'hidden' },
-  barraPreench:   { height: '100%', background: '#6366f1', borderRadius: '2px', transition: 'width 0.3s' },
-  contadorTexto:  { color: '#475569', fontSize: '11px' },
+  buscarBloco: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' },
+  botaoBuscar: {
+    display: 'flex', alignItems: 'center',
+    background: color.primary, color: color.white,
+    border: 'none', borderRadius: radius.md,
+    padding: '11px 18px', cursor: 'pointer',
+    fontWeight: '700', fontSize: '13px', fontFamily: 'inherit',
+    boxShadow: shadow.primary, transition: transition.fast,
+  },
+  botaoBuscarDisabled: {
+    display: 'flex', alignItems: 'center',
+    background: color.hover, color: color.textDisabled,
+    border: `1px solid #1a2432`, borderRadius: radius.md,
+    padding: '11px 18px', cursor: 'not-allowed',
+    fontWeight: '700', fontSize: '13px', fontFamily: 'inherit',
+  },
+  spinner:      { width: '12px', height: '12px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', marginRight: '8px', animation: 'spin 0.8s linear infinite' },
+  contadorWrap: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', width: '140px' },
+  barraFundo:   { width: '100%', height: '3px', background: color.hover, borderRadius: '2px', overflow: 'hidden' },
+  barraPreench: { height: '100%', background: color.primary, borderRadius: '2px', transition: 'width 0.3s' },
+  contadorTexto:{ color: color.textMuted, fontSize: '11px' },
 
-  // Feedback
-  resultadoBox:   { display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', color: '#22c55e', borderRadius: '10px', padding: '12px 16px', marginBottom: '20px', fontSize: '13px' },
-  erroBox:        { display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: '#ef4444', borderRadius: '10px', padding: '12px 16px', marginBottom: '20px', fontSize: '13px' },
+  resultadoBox: { display: 'flex', alignItems: 'center', gap: '10px', background: color.successMuted, border: borda.success, color: color.success, borderRadius: radius.md, padding: '12px 16px', marginBottom: '20px', fontSize: '13px' },
+  erroBox:      { display: 'flex', alignItems: 'center', gap: '10px', background: color.dangerMuted, border: borda.danger, color: color.danger, borderRadius: radius.md, padding: '12px 16px', marginBottom: '20px', fontSize: '13px' },
 
-  // Form
-  formBloco:      { background: '#111827', border: '1px solid #1e293b', borderRadius: '12px', padding: '20px', marginBottom: '20px' },
-  form:           { display: 'flex', gap: '10px', flexWrap: 'wrap' },
-  input:          { flex: 1, minWidth: '160px', background: '#0f1117', border: '1px solid #1e293b', borderRadius: '8px', padding: '10px 14px', color: '#e2e8f0', fontSize: '13px', fontFamily: 'inherit' },
-  select:         { background: '#0f1117', border: '1px solid #1e293b', borderRadius: '8px', padding: '10px 12px', color: '#e2e8f0', fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit' },
-  botaoAdicionar: { background: '#6366f1', border: 'none', color: '#fff', borderRadius: '8px', padding: '10px 18px', cursor: 'pointer', fontWeight: '700', fontSize: '13px', fontFamily: 'inherit', transition: 'opacity 0.15s' },
-  limiteAviso:    { color: '#f59e0b', fontSize: '12px', marginTop: '12px' },
+  formBloco: { background: color.card, border: borda.base, borderRadius: radius.lg, padding: '20px', marginBottom: '20px', boxShadow: shadow.card },
+  form:      { display: 'flex', gap: '10px', flexWrap: 'wrap' },
+  input:     { flex: 1, minWidth: '160px', background: color.input, border: borda.base, borderRadius: radius.md, padding: '10px 14px', color: color.textPrimary, fontSize: '13px', fontFamily: 'inherit', outline: 'none', transition: transition.fast },
+  inputDisabled: { flex: 1, minWidth: '160px', background: color.inputDisabled, border: `1px solid #1a2432`, borderRadius: radius.md, padding: '10px 14px', color: color.textDisabled, fontSize: '13px', fontFamily: 'inherit', cursor: 'not-allowed' },
+  select:    { background: color.input, border: borda.base, borderRadius: radius.md, padding: '10px 12px', color: color.textPrimary, fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit', outline: 'none' },
+  selectDisabled: { background: color.inputDisabled, border: `1px solid #1a2432`, borderRadius: radius.md, padding: '10px 12px', color: color.textDisabled, fontSize: '13px', cursor: 'not-allowed', fontFamily: 'inherit' },
+  botaoAdicionar: { background: color.primary, border: 'none', color: color.white, borderRadius: radius.md, padding: '10px 18px', cursor: 'pointer', fontWeight: '700', fontSize: '13px', fontFamily: 'inherit', boxShadow: shadow.primary, transition: transition.fast },
+  botaoAdicionarDisabled: { background: color.hover, border: `1px solid #1a2432`, color: color.textDisabled, borderRadius: radius.md, padding: '10px 18px', cursor: 'not-allowed', fontWeight: '700', fontSize: '13px', fontFamily: 'inherit' },
+  limiteAviso: { color: color.warning, fontSize: '12px', marginTop: '12px' },
 
-  // Vazio
-  vazioWrap:      { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '56px', gap: '12px' },
-  vazioIconeWrap: { width: '64px', height: '64px', background: '#111827', border: '1px solid #1e293b', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '4px' },
-  vazioTitulo:    { color: '#94a3b8', fontSize: '15px', fontWeight: '600' },
-  vazioTexto:     { color: '#475569', fontSize: '13px', textAlign: 'center', maxWidth: '280px', lineHeight: '1.5' },
+  vazioWrap:     { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '56px', gap: '12px' },
+  vazioIconeWrap:{ width: '64px', height: '64px', background: color.card, border: borda.base, borderRadius: radius.xl, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '4px' },
+  vazioTitulo:   { color: color.textSecondary, fontSize: '15px', fontWeight: '600' },
+  vazioTexto:    { color: color.textMuted, fontSize: '13px', textAlign: 'center', maxWidth: '280px', lineHeight: '1.5' },
 
-  // Lista
-  lista:          { display: 'flex', flexDirection: 'column', gap: '8px' },
-  item:           { background: '#111827', border: '1px solid #1e293b', borderRadius: '12px', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '14px' },
-  statusDot:      { width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0 },
-  itemCorpo:      { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '5px' },
-  itemKeyword:    { color: '#e2e8f0', fontSize: '14px', fontWeight: '600' },
-  itemMeta:       { display: 'flex', alignItems: 'center', gap: '8px' },
-  metaPill:       { background: '#0f1117', color: '#64748b', fontSize: '11px', fontWeight: '500', padding: '2px 8px', borderRadius: '6px', border: '1px solid #1e293b' },
-  metaStatus:     { fontSize: '11px', fontWeight: '600' },
-  itemAcoes:      { display: 'flex', gap: '8px', flexShrink: 0 },
-  botaoToggle:    { background: 'transparent', border: '1px solid', borderRadius: '7px', padding: '6px 12px', cursor: 'pointer', fontSize: '12px', fontWeight: '600', fontFamily: 'inherit' },
-  botaoRemover:   { display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', background: 'transparent', border: '1px solid #1e293b', borderRadius: '7px', cursor: 'pointer', color: '#475569' },
+  lista:      { display: 'flex', flexDirection: 'column', gap: '8px' },
+  item:       { background: color.card, border: borda.base, borderRadius: radius.lg, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '14px', boxShadow: shadow.card },
+  statusDot:  { width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0 },
+  itemCorpo:  { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '5px' },
+  itemKeyword:{ color: color.textPrimary, fontSize: '14px', fontWeight: '600' },
+  itemMeta:   { display: 'flex', alignItems: 'center', gap: '8px' },
+  metaPill:   { background: color.surface, color: color.textMuted, fontSize: '11px', fontWeight: '500', padding: '2px 8px', borderRadius: radius.sm, border: borda.base },
+  metaStatus: { fontSize: '11px', fontWeight: '600' },
+  itemAcoes:  { display: 'flex', gap: '8px', flexShrink: 0 },
+  botaoToggle:{ background: 'transparent', border: '1px solid', borderRadius: radius.sm, padding: '6px 12px', cursor: 'pointer', fontSize: '12px', fontWeight: '600', fontFamily: 'inherit', transition: transition.fast },
+  botaoRemover:{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', background: color.dangerMuted, border: borda.danger, borderRadius: radius.sm, cursor: 'pointer', color: color.danger, transition: transition.fast },
 
-  // Fake (bloqueado)
-  listaFake:      { display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: '400px', marginTop: '16px' },
-  itemFake:       { background: '#111827', border: '1px solid #1e293b', borderRadius: '10px', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  listaFake:  { display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: '400px', marginTop: '16px' },
+  itemFake:   { background: color.card, border: borda.base, borderRadius: radius.md, padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
 }

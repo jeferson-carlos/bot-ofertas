@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../supabaseClient'
+import { color, shadow, radius, borda, transition } from '../../theme'
 
 export default function Cadastro() {
   const [email, setEmail]     = useState('')
@@ -8,6 +9,8 @@ export default function Cadastro() {
   const [loading, setLoading] = useState(false)
   const [erro, setErro]       = useState('')
   const [sucesso, setSucesso] = useState(false)
+  const [focusEmail, setFocusEmail] = useState(false)
+  const [focusSenha, setFocusSenha] = useState(false)
   const navigate = useNavigate()
 
   async function handleSubmit(e) {
@@ -15,9 +18,7 @@ export default function Cadastro() {
     if (senha.length < 6) { setErro('A senha deve ter pelo menos 6 caracteres.'); return }
     setLoading(true)
     setErro('')
-
     const { error } = await supabase.auth.signUp({ email, password: senha })
-
     setLoading(false)
     if (error) {
       setErro(error.message === 'User already registered' ? 'Este e-mail já está cadastrado.' : 'Erro ao criar conta. Tente novamente.')
@@ -30,39 +31,59 @@ export default function Cadastro() {
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <Link to="/" style={styles.logo}>PropagAI</Link>
+        <Link to="/" style={styles.logoWrap}>
+          <div style={styles.logoIcone}>P</div>
+          <span style={styles.logoTexto}>PropagAI</span>
+        </Link>
         <h1 style={styles.titulo}>Criar conta grátis</h1>
 
         {sucesso ? (
-          <div style={styles.sucesso}>
-            <p style={{ fontSize: '32px', margin: '0 0 8px' }}>✅</p>
-            <p style={{ color: '#10b981', fontWeight: 'bold' }}>Conta criada!</p>
-            <p style={{ color: '#6b7280', fontSize: '13px' }}>Redirecionando...</p>
+          <div style={styles.sucessoBox}>
+            <div style={styles.sucessoIcone}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={color.success} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <p style={{ color: color.success, fontWeight: '700', fontSize: '16px', margin: '0 0 4px' }}>Conta criada!</p>
+            <p style={{ color: color.textMuted, fontSize: '13px' }}>Redirecionando para o painel...</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit}>
-            <label style={styles.label}>E-mail</label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="seu@email.com"
-              required
-              style={styles.input}
-            />
-            <label style={styles.label}>Senha</label>
-            <input
-              type="password"
-              value={senha}
-              onChange={e => setSenha(e.target.value)}
-              placeholder="Mínimo 6 caracteres"
-              required
-              style={styles.input}
-            />
+            <div style={styles.campoGrupo}>
+              <label style={styles.label}>E-mail</label>
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                onFocus={() => setFocusEmail(true)}
+                onBlur={() => setFocusEmail(false)}
+                placeholder="seu@email.com"
+                required
+                style={focusEmail ? styles.inputFocus : styles.input}
+              />
+            </div>
 
-            {erro && <p style={styles.erro}>{erro}</p>}
+            <div style={styles.campoGrupo}>
+              <label style={styles.label}>Senha</label>
+              <input
+                type="password"
+                value={senha}
+                onChange={e => setSenha(e.target.value)}
+                onFocus={() => setFocusSenha(true)}
+                onBlur={() => setFocusSenha(false)}
+                placeholder="Mínimo 6 caracteres"
+                required
+                style={focusSenha ? styles.inputFocus : styles.input}
+              />
+            </div>
 
-            <button type="submit" disabled={loading} style={styles.botao}>
+            {erro && (
+              <div style={{ ...styles.avisoBox, background: color.dangerMuted, border: borda.danger, color: color.danger }}>
+                {erro}
+              </div>
+            )}
+
+            <button type="submit" disabled={loading} style={loading ? styles.botaoDisabled : styles.botao}>
               {loading ? 'Criando conta...' : 'Criar conta grátis'}
             </button>
 
@@ -82,16 +103,104 @@ export default function Cadastro() {
 }
 
 const styles = {
-  container: { minHeight: '100vh', background: '#0f1117', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', fontFamily: 'sans-serif' },
-  card:      { background: '#1e293b', borderRadius: '16px', padding: '40px', width: '100%', maxWidth: '400px', border: '1px solid #374151' },
-  logo:      { display: 'block', color: '#6366f1', fontSize: '20px', fontWeight: 'bold', textDecoration: 'none', marginBottom: '24px' },
-  titulo:    { color: '#e2e8f0', fontSize: '22px', fontWeight: 'bold', margin: '0 0 28px' },
-  label:     { display: 'block', color: '#9ca3af', fontSize: '13px', marginBottom: '6px' },
-  input:     { width: '100%', background: '#0f1117', border: '1px solid #374151', borderRadius: '8px', padding: '10px 12px', color: '#e2e8f0', fontSize: '14px', marginBottom: '16px', boxSizing: 'border-box' },
-  botao:     { width: '100%', background: '#6366f1', color: '#fff', border: 'none', borderRadius: '8px', padding: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px', marginTop: '4px' },
-  erro:      { color: '#ef4444', fontSize: '13px', marginBottom: '8px' },
-  termos:    { color: '#4b5563', fontSize: '11px', textAlign: 'center', marginTop: '12px' },
-  sucesso:   { textAlign: 'center', padding: '16px 0' },
-  rodape:    { color: '#6b7280', fontSize: '13px', textAlign: 'center', marginTop: '24px' },
-  link:      { color: '#6366f1', textDecoration: 'none' },
+  container: {
+    minHeight: '100vh',
+    backgroundImage: `radial-gradient(ellipse 80% 60% at 50% -10%, rgba(99,102,241,0.22) 0%, transparent 60%)`,
+    backgroundColor: color.bg,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    padding: '24px',
+    fontFamily: 'system-ui, -apple-system, sans-serif',
+  },
+  card: {
+    background: color.card,
+    borderRadius: radius.xl,
+    padding: '40px',
+    width: '100%', maxWidth: '400px',
+    border: `1px solid rgba(255,255,255,0.08)`,
+    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.07), 0 20px 60px rgba(0,0,0,0.65)',
+  },
+  logoWrap: {
+    display: 'flex', alignItems: 'center', gap: '10px',
+    textDecoration: 'none', marginBottom: '32px',
+  },
+  logoIcone: {
+    width: '28px', height: '28px',
+    background: color.primaryGrad,
+    borderRadius: radius.md,
+    boxShadow: '0 0 16px rgba(99,102,241,0.40)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    color: '#fff', fontWeight: '800', fontSize: '13px', flexShrink: 0,
+  },
+  logoTexto: {
+    fontSize: '17px', fontWeight: '800', letterSpacing: '-0.5px',
+    background: 'linear-gradient(135deg, #a5b4fc 0%, #c4b5fd 100%)',
+    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+  },
+  titulo: {
+    color: color.textPrimary,
+    fontSize: '22px', fontWeight: '700',
+    margin: '0 0 28px', letterSpacing: '-0.3px',
+  },
+  campoGrupo: { marginBottom: '16px' },
+  label: {
+    display: 'block', color: color.textSecondary,
+    fontSize: '12px', fontWeight: '600', marginBottom: '7px',
+    textTransform: 'uppercase', letterSpacing: '0.5px',
+  },
+  input: {
+    width: '100%', background: color.input,
+    border: `1px solid rgba(255,255,255,0.08)`,
+    borderRadius: radius.md,
+    padding: '11px 14px', color: color.textPrimary,
+    fontSize: '14px', boxSizing: 'border-box',
+    outline: 'none', fontFamily: 'inherit',
+    transition: transition.fast,
+  },
+  inputFocus: {
+    width: '100%', background: color.input,
+    border: `1px solid rgba(99,102,241,0.50)`,
+    boxShadow: shadow.focus,
+    borderRadius: radius.md,
+    padding: '11px 14px', color: color.textPrimary,
+    fontSize: '14px', boxSizing: 'border-box',
+    outline: 'none', fontFamily: 'inherit',
+    transition: transition.fast,
+  },
+  avisoBox: {
+    borderRadius: radius.md, padding: '10px 14px',
+    fontSize: '13px', marginBottom: '14px', fontWeight: '500',
+  },
+  botao: {
+    width: '100%', background: color.primaryGrad,
+    color: color.white, border: 'none',
+    borderRadius: radius.md, padding: '13px',
+    cursor: 'pointer', fontWeight: '700', fontSize: '15px',
+    marginTop: '4px', fontFamily: 'inherit',
+    boxShadow: shadow.primary,
+    transition: transition.fast,
+  },
+  botaoDisabled: {
+    width: '100%', background: color.hover,
+    color: color.textDisabled, border: `1px solid rgba(255,255,255,0.04)`,
+    borderRadius: radius.md, padding: '13px',
+    cursor: 'not-allowed', fontWeight: '700', fontSize: '15px',
+    marginTop: '4px', fontFamily: 'inherit', opacity: 1,
+  },
+  termos: { color: color.textDisabled, fontSize: '11px', textAlign: 'center', marginTop: '12px' },
+  sucessoBox: {
+    textAlign: 'center', padding: '32px 20px',
+    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px',
+  },
+  sucessoIcone: {
+    width: '56px', height: '56px',
+    background: color.successMuted,
+    border: `1px solid rgba(34,197,94,0.25)`,
+    borderRadius: '50%',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+  },
+  rodape: {
+    color: color.textMuted, fontSize: '13px',
+    textAlign: 'center', marginTop: '24px',
+  },
+  link: { color: color.primaryLight, textDecoration: 'none', fontWeight: '600' },
 }

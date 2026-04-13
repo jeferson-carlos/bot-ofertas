@@ -2,13 +2,14 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PublicLayout from '../../components/layouts/PublicLayout'
 import WaitlistModal from '../../components/WaitlistModal'
+import { color, shadow, radius, borda, transition } from '../../theme'
 
 const PLANOS = [
   {
     nome: 'Free',
     preco: 'Grátis',
     precoSub: 'para sempre',
-    cor: '#94a3b8',
+    cor: color.planFree,
     features: [
       'Acesso ao painel de ofertas',
       'Visualizar últimas 10 ofertas',
@@ -26,7 +27,7 @@ const PLANOS = [
     nome: 'Pro',
     preco: 'R$ 49',
     precoSub: '/ mês',
-    cor: '#6366f1',
+    cor: color.planPro,
     features: [
       'Todas as ofertas coletadas',
       'Até 3 keywords personalizadas',
@@ -42,7 +43,7 @@ const PLANOS = [
     nome: 'Premium',
     preco: 'R$ 99',
     precoSub: '/ mês',
-    cor: '#f59e0b',
+    cor: color.planPremium,
     destaque: true,
     features: [
       'Tudo do plano Pro',
@@ -58,10 +59,10 @@ const PLANOS = [
 ]
 
 const PASSOS = [
-  { num: '01', icone: '🔍', titulo: 'Configure suas keywords', desc: 'Defina os produtos que quer monitorar. O sistema busca automaticamente os melhores descontos na Shopee a cada hora.' },
-  { num: '02', icone: '⚡', titulo: 'Coletamos as ofertas', desc: 'A cada hora vasculhamos a Shopee em busca de descontos reais — calculados a partir do preço original, sem depender de dados imprecisos.' },
-  { num: '03', icone: '✅', titulo: 'Você aprova', desc: 'No painel você revisa cada oferta e decide o que enviar ou descartar. Controle total sobre o que vai para o seu canal.' },
-  { num: '04', icone: '📣', titulo: 'Dispara no Telegram', desc: 'Com um clique a oferta é enviada formatada para o seu canal, com imagem, preços, desconto e link de afiliado.' },
+  { num: '01', titulo: 'Configure suas keywords', desc: 'Defina os produtos que quer monitorar. O sistema busca automaticamente os melhores descontos na Shopee a cada hora.' },
+  { num: '02', titulo: 'Coletamos as ofertas', desc: 'A cada hora vasculhamos a Shopee em busca de descontos reais — calculados a partir do preço original, sem depender de dados imprecisos.' },
+  { num: '03', titulo: 'Você aprova', desc: 'No painel você revisa cada oferta e decide o que enviar ou descartar. Controle total sobre o que vai para o seu canal.' },
+  { num: '04', titulo: 'Dispara no Telegram', desc: 'Com um clique a oferta é enviada formatada para o seu canal, com imagem, preços, desconto e link de afiliado.' },
 ]
 
 const FAQ = [
@@ -89,7 +90,10 @@ export default function Landing() {
       <section style={s.hero}>
         <div style={s.container}>
           <div style={s.heroInner}>
-            <span style={s.heroBadge}>🚀 Automatize seus links afiliados da Shopee</span>
+            <div style={s.heroBadge}>
+              <span style={s.heroBadgeDot} />
+              Automatize seus links afiliados da Shopee
+            </div>
             <h1 style={s.heroTitulo}>
               Encontre ofertas reais.<br />
               <span style={s.heroDestaque}>Dispare no Telegram.</span>
@@ -100,7 +104,8 @@ export default function Landing() {
             </p>
             <div style={s.heroBotoes}>
               <button onClick={() => navigate('/cadastro')} style={s.btnPrimario}>
-                Começar grátis →
+                Começar grátis
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
               </button>
               <a href="#como-funciona" style={s.btnGhost}>Ver como funciona</a>
             </div>
@@ -113,12 +118,12 @@ export default function Landing() {
       <div style={s.numerosWrap}>
         <div style={s.numerosGrid}>
           {[
-            { valor: '1h',      label: 'Intervalo de coleta automática' },
-            { valor: '50+',     label: 'Produtos analisados por keyword' },
-            { valor: '10%',     label: 'Desconto mínimo filtrado' },
-            { valor: '1 clique',label: 'Para disparar no Telegram' },
-          ].map(({ valor, label }) => (
-            <div key={label} style={s.numeroCard}>
+            { valor: '1h',       label: 'Intervalo de coleta automática' },
+            { valor: '50+',      label: 'Produtos analisados por keyword' },
+            { valor: '10%',      label: 'Desconto mínimo filtrado' },
+            { valor: '1 clique', label: 'Para disparar no Telegram' },
+          ].map(({ valor, label }, i) => (
+            <div key={label} style={{ ...s.numeroCard, ...(i < 3 ? s.numeroCardBorder : {}) }}>
               <span style={s.numeroValor}>{valor}</span>
               <span style={s.numeroLabel}>{label}</span>
             </div>
@@ -138,7 +143,6 @@ export default function Landing() {
             {PASSOS.map((p) => (
               <div key={p.num} style={s.passoCard}>
                 <span style={s.passoNum}>{p.num}</span>
-                <span style={s.passoIcone}>{p.icone}</span>
                 <h3 style={s.passoTitulo}>{p.titulo}</h3>
                 <p style={s.passoDesc}>{p.desc}</p>
               </div>
@@ -148,7 +152,7 @@ export default function Landing() {
       </section>
 
       {/* ── PLANOS ── */}
-      <section id="precos" style={{ ...s.secaoWrap, background: '#080d14' }}>
+      <section id="precos" style={{ ...s.secaoWrap, background: color.surface }}>
         <div style={s.container}>
           <div style={s.secaoHeader}>
             <span style={s.secaoBadge}>Planos e preços</span>
@@ -164,7 +168,9 @@ export default function Landing() {
                   ...(plano.destaque ? s.planoDestaque : {}),
                 }}
               >
-                {plano.destaque && <div style={s.popularBadge}>⭐ Mais popular</div>}
+                {plano.destaque && (
+                  <div style={s.popularBadge}>Mais popular</div>
+                )}
 
                 <div>
                   <h3 style={{ ...s.planoNome, color: plano.cor }}>{plano.nome}</h3>
@@ -177,14 +183,18 @@ export default function Landing() {
                 <ul style={s.planoLista}>
                   {plano.features.map((f, i) => (
                     <li key={i} style={s.planoItem}>
-                      <span style={s.check}>✓</span>
-                      <span>{f}</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={color.success} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }}>
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                      <span style={{ color: color.textSecondary }}>{f}</span>
                     </li>
                   ))}
                   {plano.bloqueado.map((f, i) => (
-                    <li key={i} style={{ ...s.planoItem, ...s.planoItemOff }}>
-                      <span>✗</span>
-                      <span>{f}</span>
+                    <li key={i} style={{ ...s.planoItem, opacity: 0.35 }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={color.textDisabled} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }}>
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                      <span style={{ color: color.textDisabled }}>{f}</span>
                     </li>
                   ))}
                 </ul>
@@ -193,9 +203,10 @@ export default function Landing() {
                   onClick={() => handleCta(plano)}
                   style={{
                     ...s.planoBotao,
-                    background:  plano.destaque ? plano.cor : 'transparent',
-                    borderColor: plano.cor,
-                    color:       plano.destaque ? '#fff' : plano.cor,
+                    ...(plano.destaque
+                      ? { background: plano.cor === color.planPremium ? color.premiumGrad : color.primaryGrad, color: plano.cor === color.planPremium ? '#000' : '#fff', border: 'none', boxShadow: plano.cor === color.planPremium ? shadow.premium : shadow.primary }
+                      : { background: 'transparent', border: `1px solid rgba(255,255,255,0.12)`, color: color.textSecondary }
+                    ),
                   }}
                 >
                   {plano.cta}
@@ -217,14 +228,22 @@ export default function Landing() {
             {FAQ.map((item, i) => (
               <div
                 key={i}
-                style={s.faqItem}
+                style={{
+                  ...s.faqItem,
+                  background:  faqAberto === i ? color.card : 'transparent',
+                  borderColor: faqAberto === i ? 'rgba(99,102,241,0.28)' : 'rgba(255,255,255,0.08)',
+                }}
                 onClick={() => setFaqAberto(faqAberto === i ? null : i)}
               >
                 <div style={s.faqPergunta}>
                   <span style={s.faqTexto}>{item.q}</span>
-                  <span style={s.faqSeta}>{faqAberto === i ? '−' : '+'}</span>
+                  <span style={{ ...s.faqSeta, color: faqAberto === i ? color.primaryLight : color.textMuted }}>
+                    {faqAberto === i ? '−' : '+'}
+                  </span>
                 </div>
-                {faqAberto === i && <p style={s.faqResposta}>{item.a}</p>}
+                {faqAberto === i && (
+                  <p style={s.faqResposta}>{item.a}</p>
+                )}
               </div>
             ))}
           </div>
@@ -234,11 +253,13 @@ export default function Landing() {
       {/* ── CTA FINAL ── */}
       <section style={s.ctaWrap}>
         <div style={s.container}>
-          <div style={s.ctaInner}>
+          <div style={s.ctaCard}>
+            <div style={s.ctaGlow} />
             <h2 style={s.ctaTitulo}>Pronto para automatizar seu canal?</h2>
             <p style={s.ctaSub}>Cadastre-se grátis e comece a explorar o painel agora.</p>
-            <button onClick={() => navigate('/cadastro')} style={s.btnPrimario}>
-              Criar conta grátis →
+            <button onClick={() => navigate('/cadastro')} style={{ ...s.btnPrimario, fontSize: '16px', padding: '16px 40px' }}>
+              Criar conta grátis
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </button>
             <p style={s.heroNota}>Sem cartão de crédito &nbsp;·&nbsp; Cancele quando quiser</p>
           </div>
@@ -252,73 +273,205 @@ export default function Landing() {
   )
 }
 
-/* ── ESTILOS ── */
 const s = {
-  // Layout base
-  container:    { width: '100%', maxWidth: '1140px', margin: '0 auto', padding: '0 24px' },
+  container: { width: '100%', maxWidth: '1140px', margin: '0 auto', padding: '0 24px' },
 
-  // Hero
-  hero:         { padding: '120px 0 100px', background: 'radial-gradient(ellipse 80% 60% at 50% -10%, rgba(99,102,241,0.25) 0%, transparent 70%), #0f1117' },
-  heroInner:    { maxWidth: '760px', margin: '0 auto', textAlign: 'center' },
-  heroBadge:    { display: 'inline-block', background: 'rgba(99,102,241,0.12)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.25)', fontSize: '13px', padding: '6px 18px', borderRadius: '100px', marginBottom: '32px', fontWeight: '500' },
-  heroTitulo:   { fontSize: 'clamp(40px, 5.5vw, 64px)', fontWeight: '800', lineHeight: 1.08, margin: '0 0 24px', letterSpacing: '-2px', color: '#f8fafc' },
-  heroDestaque: { color: '#818cf8' },
-  heroSub:      { fontSize: '18px', lineHeight: 1.75, color: '#94a3b8', maxWidth: '580px', margin: '0 auto 44px' },
-  heroBotoes:   { display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '24px', alignItems: 'center' },
-  heroNota:     { color: '#475569', fontSize: '13px' },
+  // Hero — aurora gradient + grid sutil (transmite precisão técnica)
+  hero: {
+    padding: '140px 0 120px',
+    backgroundImage: `
+      radial-gradient(ellipse 130% 60% at 50% -10%, rgba(99,102,241,0.32) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 85% 20%, rgba(139,92,246,0.18) 0%, transparent 55%),
+      linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px)
+    `,
+    backgroundSize: 'auto, auto, 60px 60px, 60px 60px',
+    backgroundColor: '#08080c',
+  },
+  heroInner: { maxWidth: '780px', margin: '0 auto', textAlign: 'center' },
+  heroBadge: {
+    display: 'inline-flex', alignItems: 'center', gap: '10px',
+    background: 'rgba(99,102,241,0.10)',
+    color: '#a5b4fc',
+    border: '1px solid rgba(99,102,241,0.25)',
+    fontSize: '13px', padding: '7px 18px',
+    borderRadius: '100px', marginBottom: '40px', fontWeight: '600',
+    letterSpacing: '0.2px',
+  },
+  heroBadgeDot: {
+    display: 'inline-block', width: '6px', height: '6px',
+    borderRadius: '50%', background: '#a5b4fc', flexShrink: 0,
+  },
+  heroTitulo: {
+    fontSize: 'clamp(44px, 6vw, 72px)', fontWeight: '800',
+    lineHeight: 1.06, margin: '0 0 28px',
+    letterSpacing: '-2.5px', color: color.textPrimary,
+  },
+  // Gradient text — padrão Linear/Vercel para destaque em headlines
+  heroDestaque: {
+    background: 'linear-gradient(135deg, #a5b4fc 0%, #c4b5fd 40%, #e9d5ff 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
+  },
+  heroSub: {
+    fontSize: '18px', lineHeight: 1.8,
+    color: color.textSecondary,
+    maxWidth: '600px', margin: '0 auto 48px',
+  },
+  heroBotoes: {
+    display: 'flex', gap: '16px', justifyContent: 'center',
+    flexWrap: 'wrap', marginBottom: '28px', alignItems: 'center',
+  },
+  heroNota: { color: color.textMuted, fontSize: '13px' },
 
   // Números
-  numerosWrap:  { borderTop: '1px solid #1e293b', borderBottom: '1px solid #1e293b', background: '#0b0f1a' },
-  numerosGrid:  { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', maxWidth: '1140px', margin: '0 auto' },
-  numeroCard:   { padding: '36px 24px', textAlign: 'center', borderRight: '1px solid #1e293b', display: 'flex', flexDirection: 'column', gap: '8px' },
-  numeroValor:  { fontSize: '36px', fontWeight: '800', color: '#818cf8', letterSpacing: '-1px' },
-  numeroLabel:  { fontSize: '13px', color: '#64748b', lineHeight: 1.4 },
+  numerosWrap: {
+    borderTop: `1px solid rgba(255,255,255,0.06)`,
+    borderBottom: `1px solid rgba(255,255,255,0.06)`,
+    background: color.surface,
+  },
+  numerosGrid: {
+    display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
+    maxWidth: '1140px', margin: '0 auto',
+  },
+  numeroCard: {
+    padding: '44px 32px', textAlign: 'center',
+    display: 'flex', flexDirection: 'column', gap: '8px',
+  },
+  numeroCardBorder: { borderRight: `1px solid rgba(255,255,255,0.06)` },
+  // Gradient nos valores — consistência com heroDestaque
+  numeroValor: {
+    fontSize: '42px', fontWeight: '800', letterSpacing: '-2px', lineHeight: 1,
+    background: 'linear-gradient(135deg, #a5b4fc 0%, #c4b5fd 100%)',
+    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+  },
+  numeroLabel: { fontSize: '13px', color: color.textMuted, lineHeight: 1.4 },
 
   // Seções
-  secaoWrap:    { padding: '96px 0' },
-  secaoHeader:  { textAlign: 'center', marginBottom: '64px' },
-  secaoBadge:   { display: 'inline-block', color: '#818cf8', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '14px' },
-  secaoTitulo:  { fontSize: 'clamp(28px, 3.5vw, 42px)', fontWeight: '800', color: '#f8fafc', letterSpacing: '-1px', margin: '0 0 14px' },
-  secaoSub:     { color: '#64748b', fontSize: '16px', lineHeight: 1.6 },
+  secaoWrap:   { padding: '100px 0' },
+  secaoHeader: { textAlign: 'center', marginBottom: '72px' },
+  secaoBadge:  {
+    display: 'inline-block', color: color.primaryLight,
+    fontSize: '11px', fontWeight: '700',
+    textTransform: 'uppercase', letterSpacing: '2.5px', marginBottom: '16px',
+  },
+  secaoTitulo: {
+    fontSize: 'clamp(30px, 3.5vw, 44px)', fontWeight: '800',
+    color: color.textPrimary, letterSpacing: '-1.5px', margin: '0 0 16px',
+  },
+  secaoSub: { color: color.textSecondary, fontSize: '16px', lineHeight: 1.6 },
 
-  // Como funciona
-  passosGrid:   { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' },
-  passoCard:    { background: '#111827', border: '1px solid #1e293b', borderRadius: '16px', padding: '32px 28px', display: 'flex', flexDirection: 'column', gap: '12px' },
-  passoNum:     { fontSize: '52px', fontWeight: '900', color: '#1e293b', lineHeight: 1, letterSpacing: '-2px' },
-  passoIcone:   { fontSize: '28px' },
-  passoTitulo:  { fontSize: '16px', fontWeight: '700', color: '#f1f5f9' },
-  passoDesc:    { fontSize: '14px', color: '#64748b', lineHeight: 1.65 },
+  // Como funciona — cards com inner glow
+  passosGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' },
+  passoCard: {
+    background: color.card,
+    border: `1px solid rgba(255,255,255,0.08)`,
+    borderRadius: radius.xl, padding: '36px 30px',
+    display: 'flex', flexDirection: 'column', gap: '16px',
+    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.5)',
+    transition: transition.fast,
+  },
+  // Números como elemento gráfico — gradient para não parecerem texto comum
+  passoNum: {
+    fontSize: '56px', fontWeight: '900', lineHeight: 1, letterSpacing: '-3px',
+    background: 'linear-gradient(135deg, rgba(99,102,241,0.65) 0%, rgba(139,92,246,0.35) 100%)',
+    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+  },
+  passoTitulo: { fontSize: '16px', fontWeight: '700', color: color.textPrimary, letterSpacing: '-0.2px' },
+  passoDesc:   { fontSize: '14px', color: color.textSecondary, lineHeight: 1.7 },
 
   // Planos
-  planosGrid:     { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', alignItems: 'stretch' },
-  planoCard:      { background: '#111827', border: '1px solid #1e293b', borderRadius: '20px', padding: '36px 32px', display: 'flex', flexDirection: 'column', gap: '28px', position: 'relative' },
-  planoDestaque:  { border: '1px solid rgba(99,102,241,0.6)', background: '#0f1130', boxShadow: '0 0 40px rgba(99,102,241,0.12)' },
-  popularBadge:   { position: 'absolute', top: '-14px', left: '50%', transform: 'translateX(-50%)', background: '#6366f1', color: '#fff', fontSize: '11px', fontWeight: '700', padding: '5px 18px', borderRadius: '100px', whiteSpace: 'nowrap', letterSpacing: '0.5px' },
-  planoNome:      { fontSize: '14px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' },
+  planosGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', alignItems: 'stretch' },
+  planoCard:  {
+    background: color.card,
+    border: `1px solid rgba(255,255,255,0.08)`,
+    borderRadius: radius.xl, padding: '36px 32px',
+    display: 'flex', flexDirection: 'column', gap: '28px',
+    position: 'relative',
+    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.5)',
+  },
+  planoDestaque: {
+    background: 'linear-gradient(160deg, #13132a 0%, #16161f 100%)',
+    border: '1px solid rgba(99,102,241,0.32)',
+    boxShadow: '0 0 60px rgba(99,102,241,0.18), inset 0 1px 0 rgba(255,255,255,0.08)',
+  },
+  popularBadge: {
+    position: 'absolute', top: '-14px', left: '50%',
+    transform: 'translateX(-50%)',
+    background: color.primaryGrad, color: color.white,
+    fontSize: '11px', fontWeight: '700',
+    padding: '5px 18px', borderRadius: '100px',
+    whiteSpace: 'nowrap', letterSpacing: '0.5px',
+    boxShadow: shadow.primary,
+  },
+  planoNome:      { fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '14px' },
   planoPrecoWrap: { display: 'flex', alignItems: 'baseline', gap: '6px' },
-  planoPreco:     { fontSize: '42px', fontWeight: '800', color: '#f8fafc', letterSpacing: '-1.5px' },
-  planoPrecoSub:  { fontSize: '15px', color: '#64748b' },
+  planoPreco:     { fontSize: '44px', fontWeight: '800', color: color.textPrimary, letterSpacing: '-2px' },
+  planoPrecoSub:  { fontSize: '15px', color: color.textMuted },
   planoLista:     { flex: 1, display: 'flex', flexDirection: 'column', gap: '14px' },
-  planoItem:      { display: 'flex', gap: '10px', alignItems: 'flex-start', fontSize: '14px', color: '#94a3b8', lineHeight: 1.5 },
-  planoItemOff:   { color: '#334155', textDecoration: 'line-through' },
-  check:          { color: '#22c55e', fontWeight: '700', flexShrink: 0, marginTop: '1px' },
-  planoBotao:     { width: '100%', border: '1.5px solid', borderRadius: '12px', padding: '14px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', transition: 'opacity 0.2s', letterSpacing: '0.3px' },
+  planoItem:      { display: 'flex', gap: '10px', alignItems: 'flex-start', fontSize: '14px', lineHeight: 1.55 },
+  planoBotao: {
+    width: '100%', borderRadius: radius.md, padding: '14px',
+    fontSize: '14px', fontWeight: '700',
+    cursor: 'pointer', transition: transition.fast,
+    letterSpacing: '0.3px', fontFamily: 'system-ui, -apple-system, sans-serif',
+  },
 
   // FAQ
-  faqLista:     { maxWidth: '740px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '10px' },
-  faqItem:      { background: '#111827', border: '1px solid #1e293b', borderRadius: '12px', padding: '22px 28px', cursor: 'pointer', userSelect: 'none' },
-  faqPergunta:  { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '20px' },
-  faqTexto:     { color: '#e2e8f0', fontSize: '15px', fontWeight: '500', lineHeight: 1.5 },
-  faqSeta:      { color: '#6366f1', fontSize: '20px', fontWeight: '300', flexShrink: 0 },
-  faqResposta:  { color: '#64748b', fontSize: '14px', lineHeight: 1.75, marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #1e293b' },
+  faqLista: { maxWidth: '760px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '8px' },
+  faqItem: {
+    border: '1px solid', borderRadius: radius.lg,
+    padding: '22px 28px', cursor: 'pointer', userSelect: 'none',
+    transition: transition.normal,
+  },
+  faqPergunta: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '20px' },
+  faqTexto:    { color: color.textPrimary, fontSize: '15px', fontWeight: '500', lineHeight: 1.5 },
+  faqSeta:     { fontSize: '22px', fontWeight: '300', flexShrink: 0, transition: transition.fast },
+  faqResposta: { color: color.textSecondary, fontSize: '14px', lineHeight: 1.8, marginTop: '16px', paddingTop: '16px', borderTop: `1px solid rgba(255,255,255,0.06)` },
 
-  // CTA Final
-  ctaWrap:      { padding: '120px 0', background: 'radial-gradient(ellipse 80% 60% at 50% 100%, rgba(99,102,241,0.2) 0%, transparent 70%), #0b0f1a' },
-  ctaInner:     { textAlign: 'center', maxWidth: '640px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' },
-  ctaTitulo:    { fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: '800', color: '#f8fafc', letterSpacing: '-1.5px', lineHeight: 1.1 },
-  ctaSub:       { color: '#94a3b8', fontSize: '17px', lineHeight: 1.6 },
+  // CTA Final — card com glow ao invés de section com bg
+  ctaWrap: { padding: '100px 0' },
+  ctaCard: {
+    position: 'relative', overflow: 'hidden',
+    background: 'linear-gradient(160deg, #13132a 0%, #16161f 60%)',
+    border: '1px solid rgba(99,102,241,0.28)',
+    borderRadius: '24px', padding: '80px 40px',
+    textAlign: 'center',
+    boxShadow: '0 0 80px rgba(99,102,241,0.12), inset 0 1px 0 rgba(255,255,255,0.08)',
+    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px',
+  },
+  ctaGlow: {
+    position: 'absolute', top: '-60px', left: '50%',
+    transform: 'translateX(-50%)',
+    width: '500px', height: '200px',
+    background: 'radial-gradient(ellipse, rgba(99,102,241,0.20) 0%, transparent 70%)',
+    pointerEvents: 'none',
+  },
+  ctaTitulo: {
+    fontSize: 'clamp(32px, 4vw, 52px)', fontWeight: '800',
+    color: color.textPrimary, letterSpacing: '-2px', lineHeight: 1.1,
+    position: 'relative', zIndex: 1,
+  },
+  ctaSub: { color: color.textSecondary, fontSize: '17px', lineHeight: 1.6, position: 'relative', zIndex: 1 },
 
   // Botões
-  btnPrimario:  { background: '#6366f1', color: '#fff', border: 'none', borderRadius: '12px', padding: '16px 36px', fontSize: '15px', fontWeight: '700', cursor: 'pointer', letterSpacing: '0.3px' },
-  btnGhost:     { color: '#94a3b8', fontSize: '15px', padding: '16px 8px', display: 'inline-flex', alignItems: 'center', gap: '6px' },
+  btnPrimario: {
+    background: color.primaryGrad,
+    color: color.white,
+    border: 'none', borderRadius: radius.lg,
+    padding: '14px 32px', fontSize: '15px', fontWeight: '700',
+    cursor: 'pointer', letterSpacing: '0.2px',
+    boxShadow: shadow.primary,
+    transition: transition.fast,
+    fontFamily: 'system-ui, -apple-system, sans-serif',
+    display: 'inline-flex', alignItems: 'center', gap: '8px',
+    position: 'relative', zIndex: 1,
+  },
+  btnGhost: {
+    color: color.textSecondary, fontSize: '15px',
+    padding: '14px 8px', display: 'inline-flex',
+    alignItems: 'center', gap: '6px', textDecoration: 'none',
+    transition: transition.fast, fontWeight: '500',
+  },
 }
