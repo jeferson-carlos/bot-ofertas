@@ -64,16 +64,16 @@ const ICONS = {
 }
 
 const MENU = [
-  { path: '/app/dashboard',     label: 'Dashboard',      icon: ICONS.dashboard, planoMinimo: null },
-  { path: '/app/ofertas',       label: 'Ofertas',        icon: ICONS.ofertas,   planoMinimo: null },
-  { path: '/app/keywords',      label: 'Keywords',       icon: ICONS.keywords,   planoMinimo: 'pro' },
-  { path: '/app/relatorios',    label: 'Relatórios',     icon: ICONS.relatorios, planoMinimo: null },
+  { path: '/app/dashboard',     label: 'Dashboard',  icon: ICONS.dashboard,  planoMinimo: null },
+  { path: '/app/ofertas',       label: 'Ofertas',    icon: ICONS.ofertas,    planoMinimo: null },
+  { path: '/app/keywords',      label: 'Keywords',   icon: ICONS.keywords,   planoMinimo: 'pro' },
+  { path: '/app/relatorios',    label: 'Relatórios', icon: ICONS.relatorios, planoMinimo: null },
 ]
 
 const MENU_INFERIOR = [
-  { path: '/app/planos',        label: 'Planos',         icon: ICONS.planos,    planoMinimo: null },
-  { path: '/app/configuracoes', label: 'Configurações',  icon: ICONS.config,    planoMinimo: null },
-  { path: '/app/perfil',        label: 'Perfil',         icon: ICONS.perfil,    planoMinimo: null },
+  { path: '/app/planos',        label: 'Planos',        icon: ICONS.planos,  planoMinimo: null },
+  { path: '/app/configuracoes', label: 'Configurações', icon: ICONS.config,  planoMinimo: null },
+  { path: '/app/perfil',        label: 'Perfil',        icon: ICONS.perfil,  planoMinimo: null },
 ]
 
 export default function AppLayout({ children }) {
@@ -81,7 +81,7 @@ export default function AppLayout({ children }) {
   const navigate  = useNavigate()
   const location  = useLocation()
 
-  const [largura, setLargura]           = useState(window.innerWidth)
+  const [largura, setLargura]             = useState(window.innerWidth)
   const [sidebarAberta, setSidebarAberta] = useState(false)
 
   useEffect(() => {
@@ -144,9 +144,9 @@ export default function AppLayout({ children }) {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{
             ...s.planoBadge,
-            background: PLANO_COR[plano] + '1a',
+            background: PLANO_COR[plano] + '18',
             color: PLANO_COR[plano],
-            border: `1px solid ${PLANO_COR[plano]}44`,
+            border: `1px solid ${PLANO_COR[plano]}40`,
           }}>
             {PLANO_LABEL[plano]}
           </span>
@@ -165,7 +165,7 @@ export default function AppLayout({ children }) {
       </nav>
 
       {/* Navegação inferior */}
-      <nav style={{ ...s.nav, borderTop: `1px solid ${color.border}`, paddingTop: '16px', flex: 'none' }}>
+      <nav style={{ ...s.nav, borderTop: `1px solid rgba(255,255,255,0.06)`, paddingTop: '16px', flex: 'none' }}>
         <p style={s.navLabel}>Conta</p>
         {MENU_INFERIOR.map(renderItem)}
       </nav>
@@ -173,7 +173,7 @@ export default function AppLayout({ children }) {
       {/* Upgrade banner */}
       {plano === 'free' && (
         <div style={s.upgradeBanner}>
-          <p style={s.upgradeTexto}>Desbloqueie o plano <strong style={{ color: color.primary }}>Pro</strong> e automatize tudo.</p>
+          <p style={s.upgradeTexto}>Desbloqueie o plano <strong style={{ color: color.primaryLight }}>Pro</strong> e automatize tudo.</p>
           <button onClick={() => navigate('/app/planos')} style={s.upgradeBotao}>
             Ver planos →
           </button>
@@ -199,7 +199,7 @@ export default function AppLayout({ children }) {
       {isMobile && (
         <header style={s.topbar}>
           <div style={s.topbarMarca}>
-            <div style={s.logoIcone}>P</div>
+            <div style={{ ...s.logoIcone, width: '26px', height: '26px', fontSize: '12px' }}>P</div>
             <span style={s.logoTexto}>PropagAI</span>
           </div>
           <button onClick={() => setSidebarAberta(true)} style={s.hamburgerBtn}>
@@ -235,7 +235,7 @@ const s = {
     width: '240px', height: '100vh',
     position: 'sticky', top: 0,
     background: color.surface,
-    borderRight: `1px solid ${color.border}`,
+    borderRight: `1px solid rgba(255,255,255,0.06)`,
     display: 'flex', flexDirection: 'column',
     flexShrink: 0, overflowY: 'auto',
   },
@@ -247,7 +247,7 @@ const s = {
   topbar: {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
     background: color.surface,
-    borderBottom: `1px solid ${color.border}`,
+    borderBottom: `1px solid rgba(255,255,255,0.06)`,
     padding: '0 16px', height: '56px',
     flexShrink: 0, position: 'sticky', top: 0, zIndex: 100,
   },
@@ -272,21 +272,25 @@ const s = {
   },
 
   logoWrap: {
-    padding: '20px 20px 16px',
-    borderBottom: `1px solid ${color.border}`,
-    display: 'flex', flexDirection: 'column', gap: '10px',
+    padding: '20px 16px 16px',
+    borderBottom: `1px solid rgba(255,255,255,0.06)`,
+    display: 'flex', flexDirection: 'column', gap: '12px',
   },
-  logoMarca:  { display: 'flex', alignItems: 'center', gap: '10px' },
+  logoMarca: { display: 'flex', alignItems: 'center', gap: '10px' },
   logoIcone: {
-    width: '28px', height: '28px',
-    background: `linear-gradient(135deg, ${color.primary}, #818cf8)`,
+    width: '30px', height: '30px',
+    background: color.primaryGrad,
     borderRadius: radius.md,
+    boxShadow: '0 0 16px rgba(99,102,241,0.45)',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    color: color.white, fontWeight: '800', fontSize: '14px', flexShrink: 0,
+    color: '#fff', fontWeight: '800', fontSize: '14px', flexShrink: 0,
   },
   logoTexto: {
-    color: color.textPrimary, fontSize: '16px',
-    fontWeight: '700', letterSpacing: '-0.3px',
+    fontSize: '16px', fontWeight: '800', letterSpacing: '-0.5px',
+    background: 'linear-gradient(135deg, #a5b4fc 0%, #c4b5fd 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
   },
   planoBadge: {
     alignSelf: 'flex-start',
@@ -296,30 +300,33 @@ const s = {
   },
 
   nav: {
-    flex: 1, padding: '16px 10px',
+    flex: 1, padding: '12px 8px',
     display: 'flex', flexDirection: 'column', gap: '2px',
   },
   navLabel: {
-    color: color.textMuted,
+    color: color.textDisabled,
     fontSize: '10px', fontWeight: '700',
-    textTransform: 'uppercase', letterSpacing: '1.2px',
-    padding: '0 10px', marginBottom: '6px',
+    textTransform: 'uppercase', letterSpacing: '1.5px',
+    padding: '0 10px', marginBottom: '4px', marginTop: '4px',
   },
+  // Nav inativo — texto suave, sem fundo
   navItem: {
     display: 'flex', alignItems: 'center', gap: '10px',
     padding: '9px 10px',
-    color: color.textMuted,
+    color: color.textSecondary,
     textDecoration: 'none', fontSize: '14px',
     borderRadius: radius.md, fontWeight: '500',
     transition: transition.fast,
-    borderLeft: '2px solid transparent',
   },
+  // Nav ativo — pill completo com tint indigo (padrão Linear/GitHub)
   navItemAtivo: {
-    color: color.textPrimary,
-    background: color.hover,
-    borderLeft: `2px solid ${color.primary}`,
+    color: color.primaryLight,
+    background: 'rgba(99,102,241,0.12)',
+    border: '1px solid rgba(99,102,241,0.20)',
     fontWeight: '600',
+    padding: '8px 10px',
   },
+  // Nav bloqueado — claramente inacessível, diferente do inativo
   navItemBloqueado: {
     display: 'flex', alignItems: 'center', gap: '10px',
     padding: '9px 10px',
@@ -328,24 +335,23 @@ const s = {
     background: 'transparent', border: 'none',
     cursor: 'pointer', width: '100%',
     textAlign: 'left', fontFamily: 'inherit', fontWeight: '500',
-    borderLeft: '2px solid transparent',
   },
   navIcone: { flexShrink: 0, display: 'flex' },
   navTexto: { flex: 1 },
   lockWrap: { color: color.textDisabled, display: 'flex' },
 
   upgradeBanner: {
-    margin: '0 10px 12px',
-    background: color.primaryMuted,
-    border: `1px solid ${color.primaryBorder}`,
+    margin: '0 8px 12px',
+    background: 'rgba(99,102,241,0.08)',
+    border: '1px solid rgba(99,102,241,0.22)',
     borderRadius: radius.lg, padding: '16px',
   },
   upgradeTexto: {
     color: color.textSecondary, fontSize: '12px',
-    lineHeight: 1.6, marginBottom: '10px',
+    lineHeight: 1.6, marginBottom: '12px',
   },
   upgradeBotao: {
-    background: color.primary, color: color.white,
+    background: color.primaryGrad, color: color.white,
     border: 'none', borderRadius: radius.md,
     padding: '8px 14px', fontSize: '12px', fontWeight: '700',
     cursor: 'pointer', width: '100%', fontFamily: 'inherit',
@@ -353,17 +359,17 @@ const s = {
   },
 
   userWrap: {
-    padding: '14px 16px',
-    borderTop: `1px solid ${color.border}`,
+    padding: '12px 14px',
+    borderTop: `1px solid rgba(255,255,255,0.06)`,
     display: 'flex', alignItems: 'center', gap: '10px',
   },
   userAvatar: {
     width: '32px', height: '32px',
-    background: color.hover,
-    border: `1px solid ${color.border}`,
+    background: 'rgba(99,102,241,0.15)',
+    border: '1px solid rgba(99,102,241,0.25)',
     borderRadius: '50%',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    color: color.textSecondary, fontSize: '13px', fontWeight: '700', flexShrink: 0,
+    color: color.primaryLight, fontSize: '13px', fontWeight: '700', flexShrink: 0,
   },
   userInfo:  { flex: 1, minWidth: 0 },
   userEmail: {

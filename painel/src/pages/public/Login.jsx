@@ -18,26 +18,24 @@ export default function Login() {
     e.preventDefault()
     setLoading(true)
     setErro('')
-
     const { error } = await supabase.auth.signInWithPassword({ email, password: senha })
-
     setLoading(false)
-    if (error) {
-      setErro('E-mail ou senha inválidos.')
-    } else {
-      navigate('/app/dashboard')
-    }
+    if (error) setErro('E-mail ou senha inválidos.')
+    else navigate('/app/dashboard')
   }
 
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <Link to="/" style={styles.logo}>PropagAI</Link>
+        <Link to="/" style={styles.logoWrap}>
+          <div style={styles.logoIcone}>P</div>
+          <span style={styles.logoTexto}>PropagAI</span>
+        </Link>
         <h1 style={styles.titulo}>Entrar na sua conta</h1>
 
         {sessaoExpirada && (
-          <div style={styles.avisoSessao}>
-            ⚠️ Sua sessão expirou. Por favor, entre novamente.
+          <div style={{ ...styles.avisoBox, background: color.warningMuted, border: borda.warning, color: color.warning }}>
+            Sua sessão expirou. Por favor, entre novamente.
           </div>
         )}
 
@@ -71,8 +69,8 @@ export default function Login() {
           </div>
 
           {erro && (
-            <div style={styles.erroBox}>
-              <span>⚠</span> {erro}
+            <div style={{ ...styles.avisoBox, background: color.dangerMuted, border: borda.danger, color: color.danger }}>
+              {erro}
             </div>
           )}
 
@@ -93,7 +91,8 @@ export default function Login() {
 const styles = {
   container: {
     minHeight: '100vh',
-    background: color.bg,
+    backgroundImage: `radial-gradient(ellipse 80% 60% at 50% -10%, rgba(99,102,241,0.22) 0%, transparent 60%)`,
+    backgroundColor: color.bg,
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     padding: '24px',
     fontFamily: 'system-ui, -apple-system, sans-serif',
@@ -103,14 +102,25 @@ const styles = {
     borderRadius: radius.xl,
     padding: '40px',
     width: '100%', maxWidth: '400px',
-    border: borda.base,
-    boxShadow: shadow.elevated,
+    border: `1px solid rgba(255,255,255,0.08)`,
+    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.07), 0 20px 60px rgba(0,0,0,0.65)',
   },
-  logo: {
-    display: 'block', color: color.primary,
-    fontSize: '20px', fontWeight: '800',
-    textDecoration: 'none', marginBottom: '28px',
-    letterSpacing: '-0.5px',
+  logoWrap: {
+    display: 'flex', alignItems: 'center', gap: '10px',
+    textDecoration: 'none', marginBottom: '32px',
+  },
+  logoIcone: {
+    width: '28px', height: '28px',
+    background: color.primaryGrad,
+    borderRadius: radius.md,
+    boxShadow: '0 0 16px rgba(99,102,241,0.40)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    color: '#fff', fontWeight: '800', fontSize: '13px', flexShrink: 0,
+  },
+  logoTexto: {
+    fontSize: '17px', fontWeight: '800', letterSpacing: '-0.5px',
+    background: 'linear-gradient(135deg, #a5b4fc 0%, #c4b5fd 100%)',
+    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
   },
   titulo: {
     color: color.textPrimary,
@@ -125,7 +135,7 @@ const styles = {
   },
   input: {
     width: '100%', background: color.input,
-    border: borda.base,
+    border: `1px solid rgba(255,255,255,0.08)`,
     borderRadius: radius.md,
     padding: '11px 14px', color: color.textPrimary,
     fontSize: '14px', boxSizing: 'border-box',
@@ -134,7 +144,7 @@ const styles = {
   },
   inputFocus: {
     width: '100%', background: color.input,
-    border: borda.primary,
+    border: `1px solid rgba(99,102,241,0.50)`,
     boxShadow: shadow.focus,
     borderRadius: radius.md,
     padding: '11px 14px', color: color.textPrimary,
@@ -142,17 +152,13 @@ const styles = {
     outline: 'none', fontFamily: 'inherit',
     transition: transition.fast,
   },
-  erroBox: {
-    display: 'flex', alignItems: 'center', gap: '8px',
-    background: color.dangerMuted,
-    border: borda.danger,
-    color: color.danger,
-    borderRadius: radius.md,
-    padding: '10px 14px',
-    fontSize: '13px', marginBottom: '14px',
+  avisoBox: {
+    borderRadius: radius.md, padding: '10px 14px',
+    fontSize: '13px', marginBottom: '14px', fontWeight: '500',
+    border: '1px solid',
   },
   botao: {
-    width: '100%', background: color.primary,
+    width: '100%', background: color.primaryGrad,
     color: color.white, border: 'none',
     borderRadius: radius.md, padding: '13px',
     cursor: 'pointer', fontWeight: '700', fontSize: '15px',
@@ -162,7 +168,7 @@ const styles = {
   },
   botaoDisabled: {
     width: '100%', background: color.hover,
-    color: color.textDisabled, border: `1px solid #1a2432`,
+    color: color.textDisabled, border: `1px solid rgba(255,255,255,0.04)`,
     borderRadius: radius.md, padding: '13px',
     cursor: 'not-allowed', fontWeight: '700', fontSize: '15px',
     marginTop: '8px', fontFamily: 'inherit', opacity: 1,
@@ -171,12 +177,5 @@ const styles = {
     color: color.textMuted, fontSize: '13px',
     textAlign: 'center', marginTop: '24px',
   },
-  link: { color: color.primary, textDecoration: 'none', fontWeight: '600' },
-  avisoSessao: {
-    background: color.warningMuted,
-    border: borda.warning,
-    color: color.warning,
-    borderRadius: radius.md,
-    padding: '10px 14px', fontSize: '13px', marginBottom: '20px',
-  },
+  link: { color: color.primaryLight, textDecoration: 'none', fontWeight: '600' },
 }
