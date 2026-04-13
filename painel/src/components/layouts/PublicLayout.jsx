@@ -7,7 +7,7 @@ export default function PublicLayout({ children }) {
   const navigate = useNavigate()
 
   return (
-    <div style={{ minHeight: '100vh', background: color.bg, fontFamily: 'system-ui, -apple-system, sans-serif', overflowX: 'hidden' }}>
+    <div style={{ background: color.bg, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       <nav style={styles.nav}>
         <Link to="/" style={styles.logoWrap}>
           <div style={styles.logoIcone}>P</div>
@@ -29,7 +29,7 @@ export default function PublicLayout({ children }) {
         </div>
       </nav>
 
-      <main>{children}</main>
+      <main style={{ overflowX: 'clip' }}>{children}</main>
 
       <footer style={styles.footer}>
         <div style={styles.footerInner}>
