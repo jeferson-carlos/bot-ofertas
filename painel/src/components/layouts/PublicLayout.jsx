@@ -1,9 +1,9 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../../contexts/AuthContext'
+import { useSafeAuth } from '../../hooks/useSafeAuth'
 import { color, shadow, radius, transition } from '../../theme'
 
 export default function PublicLayout({ children }) {
-  const { user } = useAuth()
+  const { user } = useSafeAuth()
   const navigate = useNavigate()
 
   return (

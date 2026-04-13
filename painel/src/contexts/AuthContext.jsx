@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { supabase } from '../supabaseClient'
 
-const AuthContext = createContext({})
+export const AuthContext = createContext({})
 
 const HIERARQUIA = { free: 0, pro: 1, premium: 2 }
 
