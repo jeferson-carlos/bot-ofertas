@@ -24,9 +24,9 @@ export const color = {
   primaryGrad:   'linear-gradient(135deg, #6366f1 0%, #7c3aed 100%)',
 
   // Status — sucesso
-  success:       '#22c55e',
-  successMuted:  'rgba(34,197,94,0.10)',
-  successBorder: 'rgba(34,197,94,0.25)',
+  success:       '#4ade80',
+  successMuted:  'rgba(74,222,128,0.10)',
+  successBorder: 'rgba(74,222,128,0.25)',
 
   // Status — aviso / premium
   warning:       '#f59e0b',
@@ -39,22 +39,22 @@ export const color = {
   dangerMuted:   'rgba(248,113,113,0.10)',
   dangerBorder:  'rgba(248,113,113,0.25)',
 
-  // Premium — âmbar
-  premium:       '#f59e0b',
-  premiumMuted:  'rgba(245,158,11,0.10)',
-  premiumBorder: 'rgba(245,158,11,0.25)',
-  premiumGrad:   'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+  // Premium — violeta intenso
+  premium:       '#a78bfa',
+  premiumMuted:  'rgba(167,139,250,0.10)',
+  premiumBorder: 'rgba(167,139,250,0.25)',
+  premiumGrad:   'linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%)',
 
   // Hierarquia de texto — 4 níveis
   textPrimary:   '#fafafa',    // quase branco — títulos, valores
   textSecondary: '#a1a1aa',    // zinc-400 — body, labels, subtítulos
   textMuted:     '#52525b',    // zinc-600 — metadados
-  textDisabled:  '#27272a',    // zinc-800 — desabilitado / bloqueado
+  textDisabled:  '#3f3f46',    // zinc-700 — desabilitado / bloqueado
 
   // Planos
-  planFree:    '#71717a',
+  planFree:    '#a1a1aa',
   planPro:     '#6366f1',
-  planPremium: '#f59e0b',
+  planPremium: '#a78bfa',
 
   overlayBg: 'rgba(0,0,0,0.88)',
   white:     '#ffffff',
@@ -67,8 +67,8 @@ export const shadow = {
   sidebar:  '8px 0 48px rgba(0,0,0,0.85)',
   focus:    '0 0 0 3px rgba(99,102,241,0.28)',
   primary:  '0 4px 20px rgba(99,102,241,0.50), inset 0 1px 0 rgba(255,255,255,0.18)',
-  premium:  '0 4px 24px rgba(245,158,11,0.45), inset 0 1px 0 rgba(255,255,255,0.15)',
-  success:  '0 4px 16px rgba(34,197,94,0.35)',
+  premium:  '0 4px 24px rgba(167,139,250,0.45), inset 0 1px 0 rgba(255,255,255,0.15)',
+  success:  '0 4px 16px rgba(74,222,128,0.35)',
 }
 
 export const radius = {
