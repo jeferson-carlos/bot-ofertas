@@ -1,12 +1,13 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
+import { color, shadow, radius, transition } from '../../theme'
 
 export default function PublicLayout({ children }) {
   const { user } = useAuth()
   const navigate = useNavigate()
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f1117', fontFamily: 'system-ui, sans-serif', overflowX: 'hidden' }}>
+    <div style={{ minHeight: '100vh', background: color.bg, fontFamily: 'system-ui, -apple-system, sans-serif', overflowX: 'hidden' }}>
       {/* Navbar */}
       <nav style={styles.nav}>
         <Link to="/" style={styles.logo}>PropagAI</Link>
@@ -38,11 +39,45 @@ export default function PublicLayout({ children }) {
 }
 
 const styles = {
-  nav:          { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px', height: '64px', borderBottom: '1px solid #1e293b', position: 'sticky', top: 0, background: 'rgba(15,17,23,0.95)', backdropFilter: 'blur(12px)', zIndex: 100, width: '100%' },
-  logo:         { color: '#6366f1', fontSize: '20px', fontWeight: 'bold', textDecoration: 'none', letterSpacing: '-0.5px' },
-  navLinks:     { display: 'flex', alignItems: 'center', gap: '24px' },
-  navLink:      { color: '#9ca3af', fontSize: '14px', textDecoration: 'none' },
-  botaoPrimario:{ background: '#6366f1', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 18px', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold', textDecoration: 'none' },
-  footer:       { textAlign: 'center', padding: '32px', borderTop: '1px solid #1e293b' },
-  footerText:   { color: '#4b5563', fontSize: '13px' },
+  nav: {
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    padding: '0 40px', height: '64px',
+    borderBottom: `1px solid ${color.border}`,
+    position: 'sticky', top: 0,
+    background: `rgba(7,11,18,0.92)`,
+    backdropFilter: 'blur(16px)',
+    WebkitBackdropFilter: 'blur(16px)',
+    zIndex: 100, width: '100%',
+    boxSizing: 'border-box',
+  },
+  logo: {
+    color: color.primary, fontSize: '20px', fontWeight: '800',
+    textDecoration: 'none', letterSpacing: '-0.5px',
+  },
+  navLinks: { display: 'flex', alignItems: 'center', gap: '28px' },
+  navLink: {
+    color: color.textMuted, fontSize: '14px', textDecoration: 'none',
+    fontWeight: '500', transition: transition.fast,
+  },
+  botaoPrimario: {
+    background: color.primary,
+    color: color.white,
+    border: 'none',
+    borderRadius: radius.md,
+    padding: '9px 20px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '700',
+    textDecoration: 'none',
+    boxShadow: shadow.primary,
+    transition: transition.fast,
+    display: 'inline-flex', alignItems: 'center',
+    fontFamily: 'system-ui, -apple-system, sans-serif',
+  },
+  footer: {
+    textAlign: 'center', padding: '40px 24px',
+    borderTop: `1px solid ${color.border}`,
+    background: color.surface,
+  },
+  footerText: { color: color.textDisabled, fontSize: '13px' },
 }

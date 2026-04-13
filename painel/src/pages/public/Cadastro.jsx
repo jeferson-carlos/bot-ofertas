@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../supabaseClient'
+import { color, shadow, radius, borda, transition } from '../../theme'
 
 export default function Cadastro() {
   const [email, setEmail]     = useState('')
@@ -8,6 +9,8 @@ export default function Cadastro() {
   const [loading, setLoading] = useState(false)
   const [erro, setErro]       = useState('')
   const [sucesso, setSucesso] = useState(false)
+  const [focusEmail, setFocusEmail] = useState(false)
+  const [focusSenha, setFocusSenha] = useState(false)
   const navigate = useNavigate()
 
   async function handleSubmit(e) {
@@ -34,35 +37,48 @@ export default function Cadastro() {
         <h1 style={styles.titulo}>Criar conta grátis</h1>
 
         {sucesso ? (
-          <div style={styles.sucesso}>
-            <p style={{ fontSize: '32px', margin: '0 0 8px' }}>✅</p>
-            <p style={{ color: '#10b981', fontWeight: 'bold' }}>Conta criada!</p>
-            <p style={{ color: '#6b7280', fontSize: '13px' }}>Redirecionando...</p>
+          <div style={styles.sucessoBox}>
+            <p style={{ fontSize: '36px', margin: '0 0 12px' }}>✅</p>
+            <p style={{ color: color.success, fontWeight: '700', fontSize: '15px', margin: '0 0 4px' }}>Conta criada!</p>
+            <p style={{ color: color.textMuted, fontSize: '13px' }}>Redirecionando...</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit}>
-            <label style={styles.label}>E-mail</label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="seu@email.com"
-              required
-              style={styles.input}
-            />
-            <label style={styles.label}>Senha</label>
-            <input
-              type="password"
-              value={senha}
-              onChange={e => setSenha(e.target.value)}
-              placeholder="Mínimo 6 caracteres"
-              required
-              style={styles.input}
-            />
+            <div style={styles.campoGrupo}>
+              <label style={styles.label}>E-mail</label>
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                onFocus={() => setFocusEmail(true)}
+                onBlur={() => setFocusEmail(false)}
+                placeholder="seu@email.com"
+                required
+                style={focusEmail ? styles.inputFocus : styles.input}
+              />
+            </div>
 
-            {erro && <p style={styles.erro}>{erro}</p>}
+            <div style={styles.campoGrupo}>
+              <label style={styles.label}>Senha</label>
+              <input
+                type="password"
+                value={senha}
+                onChange={e => setSenha(e.target.value)}
+                onFocus={() => setFocusSenha(true)}
+                onBlur={() => setFocusSenha(false)}
+                placeholder="Mínimo 6 caracteres"
+                required
+                style={focusSenha ? styles.inputFocus : styles.input}
+              />
+            </div>
 
-            <button type="submit" disabled={loading} style={styles.botao}>
+            {erro && (
+              <div style={styles.erroBox}>
+                <span>⚠</span> {erro}
+              </div>
+            )}
+
+            <button type="submit" disabled={loading} style={loading ? styles.botaoDisabled : styles.botao}>
               {loading ? 'Criando conta...' : 'Criar conta grátis'}
             </button>
 
@@ -82,16 +98,87 @@ export default function Cadastro() {
 }
 
 const styles = {
-  container: { minHeight: '100vh', background: '#0f1117', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', fontFamily: 'sans-serif' },
-  card:      { background: '#1e293b', borderRadius: '16px', padding: '40px', width: '100%', maxWidth: '400px', border: '1px solid #374151' },
-  logo:      { display: 'block', color: '#6366f1', fontSize: '20px', fontWeight: 'bold', textDecoration: 'none', marginBottom: '24px' },
-  titulo:    { color: '#e2e8f0', fontSize: '22px', fontWeight: 'bold', margin: '0 0 28px' },
-  label:     { display: 'block', color: '#9ca3af', fontSize: '13px', marginBottom: '6px' },
-  input:     { width: '100%', background: '#0f1117', border: '1px solid #374151', borderRadius: '8px', padding: '10px 12px', color: '#e2e8f0', fontSize: '14px', marginBottom: '16px', boxSizing: 'border-box' },
-  botao:     { width: '100%', background: '#6366f1', color: '#fff', border: 'none', borderRadius: '8px', padding: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px', marginTop: '4px' },
-  erro:      { color: '#ef4444', fontSize: '13px', marginBottom: '8px' },
-  termos:    { color: '#4b5563', fontSize: '11px', textAlign: 'center', marginTop: '12px' },
-  sucesso:   { textAlign: 'center', padding: '16px 0' },
-  rodape:    { color: '#6b7280', fontSize: '13px', textAlign: 'center', marginTop: '24px' },
-  link:      { color: '#6366f1', textDecoration: 'none' },
+  container: {
+    minHeight: '100vh',
+    background: color.bg,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    padding: '24px',
+    fontFamily: 'system-ui, -apple-system, sans-serif',
+  },
+  card: {
+    background: color.card,
+    borderRadius: radius.xl,
+    padding: '40px',
+    width: '100%', maxWidth: '400px',
+    border: borda.base,
+    boxShadow: shadow.elevated,
+  },
+  logo: {
+    display: 'block', color: color.primary,
+    fontSize: '20px', fontWeight: '800',
+    textDecoration: 'none', marginBottom: '28px',
+    letterSpacing: '-0.5px',
+  },
+  titulo: {
+    color: color.textPrimary,
+    fontSize: '22px', fontWeight: '700',
+    margin: '0 0 28px', letterSpacing: '-0.3px',
+  },
+  campoGrupo: { marginBottom: '16px' },
+  label: {
+    display: 'block', color: color.textSecondary,
+    fontSize: '12px', fontWeight: '600', marginBottom: '7px',
+    textTransform: 'uppercase', letterSpacing: '0.5px',
+  },
+  input: {
+    width: '100%', background: color.input,
+    border: borda.base,
+    borderRadius: radius.md,
+    padding: '11px 14px', color: color.textPrimary,
+    fontSize: '14px', boxSizing: 'border-box',
+    outline: 'none', fontFamily: 'inherit',
+    transition: transition.fast,
+  },
+  inputFocus: {
+    width: '100%', background: color.input,
+    border: borda.primary,
+    boxShadow: shadow.focus,
+    borderRadius: radius.md,
+    padding: '11px 14px', color: color.textPrimary,
+    fontSize: '14px', boxSizing: 'border-box',
+    outline: 'none', fontFamily: 'inherit',
+    transition: transition.fast,
+  },
+  erroBox: {
+    display: 'flex', alignItems: 'center', gap: '8px',
+    background: color.dangerMuted,
+    border: borda.danger,
+    color: color.danger,
+    borderRadius: radius.md,
+    padding: '10px 14px',
+    fontSize: '13px', marginBottom: '14px',
+  },
+  botao: {
+    width: '100%', background: color.primary,
+    color: color.white, border: 'none',
+    borderRadius: radius.md, padding: '13px',
+    cursor: 'pointer', fontWeight: '700', fontSize: '15px',
+    marginTop: '4px', fontFamily: 'inherit',
+    boxShadow: shadow.primary,
+    transition: transition.fast,
+  },
+  botaoDisabled: {
+    width: '100%', background: color.hover,
+    color: color.textDisabled, border: `1px solid #1a2432`,
+    borderRadius: radius.md, padding: '13px',
+    cursor: 'not-allowed', fontWeight: '700', fontSize: '15px',
+    marginTop: '4px', fontFamily: 'inherit', opacity: 1,
+  },
+  termos: { color: color.textDisabled, fontSize: '11px', textAlign: 'center', marginTop: '12px' },
+  sucessoBox: { textAlign: 'center', padding: '20px 0' },
+  rodape: {
+    color: color.textMuted, fontSize: '13px',
+    textAlign: 'center', marginTop: '24px',
+  },
+  link: { color: color.primary, textDecoration: 'none', fontWeight: '600' },
 }

@@ -2,15 +2,16 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../supabaseClient'
 import { useAuth } from '../../contexts/AuthContext'
+import { color, shadow, radius, borda, transition } from '../../theme'
 
 const PLANO_LABEL = { free: 'Free', pro: 'Pro', premium: 'Premium' }
-const PLANO_COR   = { free: '#64748b', pro: '#6366f1', premium: '#f59e0b' }
+const PLANO_COR   = { free: color.planFree, pro: color.planPro, premium: color.planPremium }
 
 const STAT_CONFIG = [
-  { status: 'pendente',   label: 'Pendentes',      cor: '#f59e0b', bg: 'rgba(245,158,11,0.1)',  icone: '⏳' },
-  { status: 'enviado',    label: 'Enviadas',        cor: '#22c55e', bg: 'rgba(34,197,94,0.1)',   icone: '✈️' },
-  { status: 'descartado', label: 'Descartadas',     cor: '#ef4444', bg: 'rgba(239,68,68,0.1)',   icone: '🗑️' },
-  { status: null,         label: 'Total coletadas', cor: '#6366f1', bg: 'rgba(99,102,241,0.1)',  icone: '📦' },
+  { status: 'pendente',   label: 'Pendentes',      cor: color.warning, bg: color.warningMuted, icone: '⏳' },
+  { status: 'enviado',    label: 'Enviadas',        cor: color.success, bg: color.successMuted,  icone: '✈️' },
+  { status: 'descartado', label: 'Descartadas',     cor: color.danger,  bg: color.dangerMuted,   icone: '🗑️' },
+  { status: null,         label: 'Total coletadas', cor: color.primary, bg: color.primaryMuted,  icone: '📦' },
 ]
 
 export default function Dashboard() {
@@ -76,7 +77,6 @@ export default function Dashboard() {
 
   const ultimaColeta  = profile?.ultima_coleta_em
   const tempoColeta   = tempoRelativo(ultimaColeta)
-  // Cron roda a cada hora — calcula próxima execução
   function proximaExecucao() {
     const agora = new Date()
     const proxima = new Date(agora)
@@ -91,7 +91,6 @@ export default function Dashboard() {
   return (
     <div>
 
-      {/* Banner de onboarding — aparece apenas quando credenciais não estão configuradas */}
       {!credenciaisOk && (
         <div style={s.onboardingBanner}>
           <div style={s.onboardingIcone}>🚀</div>
@@ -99,11 +98,11 @@ export default function Dashboard() {
             <p style={s.onboardingTitulo}>Configure sua conta para começar</p>
             <p style={s.onboardingSub}>Você precisa conectar o Shopee e o Telegram para receber ofertas automaticamente.</p>
             <div style={s.onboardingPassos}>
-              <span style={{ ...s.onboardingPasso, color: shopeeOk ? '#22c55e' : '#f59e0b' }}>
+              <span style={{ ...s.onboardingPasso, color: shopeeOk ? color.success : color.warning }}>
                 {shopeeOk ? '✓' : '○'} Shopee Afiliados
               </span>
               <span style={s.onboardingSep}>→</span>
-              <span style={{ ...s.onboardingPasso, color: telegramOk ? '#22c55e' : '#f59e0b' }}>
+              <span style={{ ...s.onboardingPasso, color: telegramOk ? color.success : color.warning }}>
                 {telegramOk ? '✓' : '○'} Telegram Bot
               </span>
             </div>
@@ -115,18 +114,21 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Header */}
       <div style={s.header}>
         <div>
           <h1 style={s.titulo}>{saudacao}, {nome} 👋</h1>
           <p style={s.subtitulo}>Aqui está o resumo do seu painel hoje</p>
         </div>
-        <div style={{ ...s.planoBadge, background: PLANO_COR[plano] + '22', color: PLANO_COR[plano], border: `1px solid ${PLANO_COR[plano]}44` }}>
+        <div style={{
+          ...s.planoBadge,
+          background: PLANO_COR[plano] + '1a',
+          color: PLANO_COR[plano],
+          border: `1px solid ${PLANO_COR[plano]}44`,
+        }}>
           Plano {PLANO_LABEL[plano]}
         </div>
       </div>
 
-      {/* Stats */}
       <div style={s.statsGrid}>
         {STAT_CONFIG.map(({ status, label, cor, bg, icone }) => (
           <div
@@ -153,10 +155,9 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Status do bot */}
       <div style={s.botStatus}>
         <div style={s.botStatusEsq}>
-          <div style={{ ...s.botDot, background: credenciaisOk ? '#22c55e' : '#475569' }} />
+          <div style={{ ...s.botDot, background: credenciaisOk ? color.success : color.border }} />
           <span style={s.botLabel}>
             {credenciaisOk
               ? tempoColeta ? `Última coleta ${tempoColeta}` : 'Bot ativo — aguardando primeira coleta'
@@ -168,15 +169,13 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Grid inferior */}
       <div style={s.gridInferior}>
 
-        {/* Ações rápidas */}
         <div style={s.bloco}>
           <h2 style={s.blocoTitulo}>Ações rápidas</h2>
           <div style={s.acoesLista}>
             <button onClick={() => navigate('/app/ofertas', { state: { filtro: 'pendente' } })} style={s.acaoItem}>
-              <div style={{ ...s.acaoIconeWrap, background: 'rgba(245,158,11,0.1)' }}>
+              <div style={{ ...s.acaoIconeWrap, background: color.warningMuted }}>
                 <span>⏳</span>
               </div>
               <div style={s.acaoInfo}>
@@ -188,7 +187,7 @@ export default function Dashboard() {
 
             {temAcesso('pro') ? (
               <button onClick={() => navigate('/app/keywords')} style={s.acaoItem}>
-                <div style={{ ...s.acaoIconeWrap, background: 'rgba(99,102,241,0.1)' }}>
+                <div style={{ ...s.acaoIconeWrap, background: color.primaryMuted }}>
                   <span>🔍</span>
                 </div>
                 <div style={s.acaoInfo}>
@@ -197,12 +196,12 @@ export default function Dashboard() {
                 </div>
               </button>
             ) : (
-              <button onClick={() => navigate('/app/planos')} style={{ ...s.acaoItem, opacity: 0.6 }}>
-                <div style={{ ...s.acaoIconeWrap, background: 'rgba(99,102,241,0.1)' }}>
+              <button onClick={() => navigate('/app/planos')} style={s.acaoItemBloqueado}>
+                <div style={{ ...s.acaoIconeWrap, background: color.primaryMuted }}>
                   <span>🔒</span>
                 </div>
                 <div style={s.acaoInfo}>
-                  <span style={s.acaoLabel}>Keywords</span>
+                  <span style={{ ...s.acaoLabel, color: color.textMuted }}>Keywords</span>
                   <span style={s.acaoSub}>Disponível no plano Pro</span>
                 </div>
                 <span style={s.upgradePill}>Upgrade</span>
@@ -211,7 +210,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Últimas enviadas */}
         <div style={s.bloco}>
           <h2 style={s.blocoTitulo}>Últimas enviadas</h2>
           {recentes.length === 0 ? (
@@ -243,69 +241,80 @@ export default function Dashboard() {
 }
 
 const s = {
-  // Onboarding
-  onboardingBanner: { display: 'flex', alignItems: 'center', gap: '16px', background: 'linear-gradient(135deg, rgba(245,158,11,0.08), rgba(245,158,11,0.04))', border: '1px solid rgba(245,158,11,0.25)', borderRadius: '14px', padding: '20px 24px', marginBottom: '28px', flexWrap: 'wrap' },
+  onboardingBanner: {
+    display: 'flex', alignItems: 'center', gap: '16px',
+    background: color.warningMuted,
+    border: borda.warning,
+    borderRadius: radius.lg, padding: '20px 24px',
+    marginBottom: '28px', flexWrap: 'wrap',
+  },
   onboardingIcone:  { fontSize: '32px', flexShrink: 0 },
   onboardingTexto:  { flex: 1, minWidth: '200px' },
-  onboardingTitulo: { color: '#f1f5f9', fontSize: '15px', fontWeight: '700', marginBottom: '4px' },
-  onboardingSub:    { color: '#64748b', fontSize: '12px', lineHeight: '1.5', marginBottom: '10px' },
+  onboardingTitulo: { color: color.textPrimary, fontSize: '15px', fontWeight: '700', marginBottom: '4px' },
+  onboardingSub:    { color: color.textMuted, fontSize: '12px', lineHeight: '1.5', marginBottom: '10px' },
   onboardingPassos: { display: 'flex', alignItems: 'center', gap: '8px' },
   onboardingPasso:  { fontSize: '12px', fontWeight: '600' },
-  onboardingSep:    { color: '#334155', fontSize: '12px' },
+  onboardingSep:    { color: color.textDisabled, fontSize: '12px' },
   onboardingBotoes: { display: 'flex', gap: '8px', flexShrink: 0, flexWrap: 'wrap' },
-  onboardingBotao:  { background: '#f59e0b', color: '#000', border: 'none', borderRadius: '8px', padding: '9px 16px', cursor: 'pointer', fontWeight: '700', fontSize: '13px', fontFamily: 'inherit' },
-  onboardingBotaoSec: { background: 'transparent', color: '#94a3b8', border: '1px solid #1e293b', borderRadius: '8px', padding: '9px 16px', cursor: 'pointer', fontSize: '13px', fontFamily: 'inherit' },
+  onboardingBotao: {
+    background: color.warning, color: '#000',
+    border: 'none', borderRadius: radius.md,
+    padding: '9px 16px', cursor: 'pointer',
+    fontWeight: '700', fontSize: '13px', fontFamily: 'inherit',
+    boxShadow: shadow.premium,
+  },
+  onboardingBotaoSec: {
+    background: 'transparent', color: color.textSecondary,
+    border: borda.base, borderRadius: radius.md,
+    padding: '9px 16px', cursor: 'pointer',
+    fontSize: '13px', fontFamily: 'inherit',
+  },
 
-  header:         { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' },
-  titulo:         { color: '#f1f5f9', fontSize: '22px', fontWeight: '700', margin: '0 0 4px', letterSpacing: '-0.3px' },
-  subtitulo:      { color: '#64748b', fontSize: '14px' },
-  planoBadge:     { fontSize: '11px', fontWeight: '700', padding: '5px 14px', borderRadius: '100px', textTransform: 'uppercase', letterSpacing: '0.8px' },
+  header:    { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' },
+  titulo:    { color: color.textPrimary, fontSize: '22px', fontWeight: '700', margin: '0 0 4px', letterSpacing: '-0.3px' },
+  subtitulo: { color: color.textMuted, fontSize: '14px' },
+  planoBadge:{ fontSize: '11px', fontWeight: '700', padding: '5px 14px', borderRadius: '100px', textTransform: 'uppercase', letterSpacing: '0.8px' },
 
-  // Stats
-  statsGrid:      { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '16px', marginBottom: '28px' },
-  statCard:       { background: '#111827', border: '1px solid #1e293b', borderRadius: '14px', padding: '20px', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', gap: '14px' },
-  statClicavel:   { cursor: 'pointer' },
-  statIconeWrap:  { width: '44px', height: '44px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  statIcone:      { fontSize: '18px' },
-  statValor:      { color: '#f1f5f9', fontSize: '26px', fontWeight: '800', margin: '0 0 2px', letterSpacing: '-0.5px' },
-  statLabel:      { color: '#64748b', fontSize: '12px' },
-  statSeta:       { marginLeft: 'auto' },
-  statBarra:      { position: 'absolute', bottom: 0, left: 0, right: 0, height: '2px' },
+  statsGrid:     { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '16px', marginBottom: '20px' },
+  statCard:      { background: color.card, border: borda.base, borderRadius: radius.lg, padding: '20px', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', gap: '14px', boxShadow: shadow.card },
+  statClicavel:  { cursor: 'pointer', transition: transition.fast },
+  statIconeWrap: { width: '44px', height: '44px', borderRadius: radius.md, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  statIcone:     { fontSize: '18px' },
+  statValor:     { color: color.textPrimary, fontSize: '26px', fontWeight: '800', margin: '0 0 2px', letterSpacing: '-0.5px' },
+  statLabel:     { color: color.textMuted, fontSize: '12px' },
+  statSeta:      { marginLeft: 'auto' },
+  statBarra:     { position: 'absolute', bottom: 0, left: 0, right: 0, height: '2px' },
 
-  // Status do bot
-  botStatus:      { display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#111827', border: '1px solid #1e293b', borderRadius: '10px', padding: '12px 16px', marginBottom: '20px', gap: '12px', flexWrap: 'wrap' },
-  botStatusEsq:   { display: 'flex', alignItems: 'center', gap: '10px' },
-  botDot:         { width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0 },
-  botLabel:       { color: '#64748b', fontSize: '13px' },
-  botProxima:     { color: '#334155', fontSize: '12px' },
+  botStatus:    { display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: color.card, border: borda.base, borderRadius: radius.md, padding: '12px 16px', marginBottom: '20px', gap: '12px', flexWrap: 'wrap' },
+  botStatusEsq: { display: 'flex', alignItems: 'center', gap: '10px' },
+  botDot:       { width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0 },
+  botLabel:     { color: color.textSecondary, fontSize: '13px' },
+  botProxima:   { color: color.textDisabled, fontSize: '12px' },
 
-  // Grid inferior
-  gridInferior:   { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' },
-  bloco:          { background: '#111827', border: '1px solid #1e293b', borderRadius: '14px', padding: '24px' },
-  blocoTitulo:    { color: '#94a3b8', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' },
+  gridInferior: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' },
+  bloco:        { background: color.card, border: borda.base, borderRadius: radius.lg, padding: '24px', boxShadow: shadow.card },
+  blocoTitulo:  { color: color.textMuted, fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' },
 
-  // Ações
-  acoesLista:     { display: 'flex', flexDirection: 'column', gap: '8px' },
-  acaoItem:       { display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: '#0f1117', border: '1px solid #1e293b', borderRadius: '10px', cursor: 'pointer', textAlign: 'left', width: '100%', fontFamily: 'inherit' },
-  acaoIconeWrap:  { width: '38px', height: '38px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', flexShrink: 0 },
-  acaoInfo:       { flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' },
-  acaoLabel:      { color: '#e2e8f0', fontSize: '13px', fontWeight: '600' },
-  acaoSub:        { color: '#64748b', fontSize: '11px' },
-  acaoCount:      { background: '#f59e0b', color: '#000', fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '100px', flexShrink: 0 },
-  upgradePill:    { background: '#6366f1', color: '#fff', fontSize: '10px', fontWeight: '700', padding: '3px 10px', borderRadius: '100px', flexShrink: 0 },
+  acoesLista:       { display: 'flex', flexDirection: 'column', gap: '8px' },
+  acaoItem:         { display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: color.input, border: borda.base, borderRadius: radius.md, cursor: 'pointer', textAlign: 'left', width: '100%', fontFamily: 'inherit', transition: transition.fast },
+  acaoItemBloqueado:{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: color.surface, border: borda.base, borderRadius: radius.md, cursor: 'pointer', textAlign: 'left', width: '100%', fontFamily: 'inherit', opacity: 0.75 },
+  acaoIconeWrap:    { width: '38px', height: '38px', borderRadius: radius.md, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', flexShrink: 0 },
+  acaoInfo:         { flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' },
+  acaoLabel:        { color: color.textPrimary, fontSize: '13px', fontWeight: '600' },
+  acaoSub:          { color: color.textMuted, fontSize: '11px' },
+  acaoCount:        { background: color.warning, color: '#000', fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '100px', flexShrink: 0 },
+  upgradePill:      { background: color.primary, color: color.white, fontSize: '10px', fontWeight: '700', padding: '3px 10px', borderRadius: '100px', flexShrink: 0 },
 
-  // Recentes
-  recenteLista:   { display: 'flex', flexDirection: 'column', gap: '1px' },
-  recenteItem:    { display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 0', borderBottom: '1px solid #1e293b' },
-  recenteInfo:    { flex: 1, minWidth: 0 },
-  recenteTitulo:  { color: '#cbd5e1', fontSize: '12px', fontWeight: '500', marginBottom: '2px' },
-  recenteSub:     { color: '#475569', fontSize: '11px' },
-  recenteDireita: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px', flexShrink: 0 },
-  recentePreco:   { color: '#22c55e', fontSize: '13px', fontWeight: '700' },
-  recenteDesconto:{ color: '#64748b', fontSize: '10px' },
+  recenteLista:    { display: 'flex', flexDirection: 'column', gap: '1px' },
+  recenteItem:     { display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 0', borderBottom: borda.base },
+  recenteInfo:     { flex: 1, minWidth: 0 },
+  recenteTitulo:   { color: color.textSecondary, fontSize: '12px', fontWeight: '500', marginBottom: '2px' },
+  recenteSub:      { color: color.textMuted, fontSize: '11px' },
+  recenteDireita:  { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px', flexShrink: 0 },
+  recentePreco:    { color: color.success, fontSize: '13px', fontWeight: '700' },
+  recenteDesconto: { color: color.textMuted, fontSize: '10px' },
 
-  // Vazio
-  vazioWrap:      { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px', gap: '8px' },
-  vazioIcone:     { fontSize: '28px' },
-  vazioTexto:     { color: '#475569', fontSize: '13px' },
+  vazioWrap:  { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px', gap: '8px' },
+  vazioIcone: { fontSize: '28px' },
+  vazioTexto: { color: color.textMuted, fontSize: '13px' },
 }

@@ -2,13 +2,14 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PublicLayout from '../../components/layouts/PublicLayout'
 import WaitlistModal from '../../components/WaitlistModal'
+import { color, shadow, radius, borda, transition } from '../../theme'
 
 const PLANOS = [
   {
     nome: 'Free',
     preco: 'Grátis',
     precoSub: 'para sempre',
-    cor: '#94a3b8',
+    cor: color.planFree,
     features: [
       'Acesso ao painel de ofertas',
       'Visualizar últimas 10 ofertas',
@@ -26,7 +27,7 @@ const PLANOS = [
     nome: 'Pro',
     preco: 'R$ 49',
     precoSub: '/ mês',
-    cor: '#6366f1',
+    cor: color.planPro,
     features: [
       'Todas as ofertas coletadas',
       'Até 3 keywords personalizadas',
@@ -42,7 +43,7 @@ const PLANOS = [
     nome: 'Premium',
     preco: 'R$ 99',
     precoSub: '/ mês',
-    cor: '#f59e0b',
+    cor: color.planPremium,
     destaque: true,
     features: [
       'Tudo do plano Pro',
@@ -148,7 +149,7 @@ export default function Landing() {
       </section>
 
       {/* ── PLANOS ── */}
-      <section id="precos" style={{ ...s.secaoWrap, background: '#080d14' }}>
+      <section id="precos" style={{ ...s.secaoWrap, background: color.surface }}>
         <div style={s.container}>
           <div style={s.secaoHeader}>
             <span style={s.secaoBadge}>Planos e preços</span>
@@ -164,7 +165,9 @@ export default function Landing() {
                   ...(plano.destaque ? s.planoDestaque : {}),
                 }}
               >
-                {plano.destaque && <div style={s.popularBadge}>⭐ Mais popular</div>}
+                {plano.destaque && (
+                  <div style={s.popularBadge}>⭐ Mais popular</div>
+                )}
 
                 <div>
                   <h3 style={{ ...s.planoNome, color: plano.cor }}>{plano.nome}</h3>
@@ -178,13 +181,13 @@ export default function Landing() {
                   {plano.features.map((f, i) => (
                     <li key={i} style={s.planoItem}>
                       <span style={s.check}>✓</span>
-                      <span>{f}</span>
+                      <span style={{ color: color.textSecondary }}>{f}</span>
                     </li>
                   ))}
                   {plano.bloqueado.map((f, i) => (
                     <li key={i} style={{ ...s.planoItem, ...s.planoItemOff }}>
-                      <span>✗</span>
-                      <span>{f}</span>
+                      <span style={{ color: color.textDisabled }}>✗</span>
+                      <span style={{ color: color.textDisabled }}>{f}</span>
                     </li>
                   ))}
                 </ul>
@@ -193,9 +196,12 @@ export default function Landing() {
                   onClick={() => handleCta(plano)}
                   style={{
                     ...s.planoBotao,
-                    background:  plano.destaque ? plano.cor : 'transparent',
-                    borderColor: plano.cor,
-                    color:       plano.destaque ? '#fff' : plano.cor,
+                    background:   plano.destaque ? plano.cor : 'transparent',
+                    borderColor:  plano.cor,
+                    color:        plano.destaque ? (plano.cor === color.planPremium ? '#000' : '#fff') : plano.cor,
+                    boxShadow:    plano.destaque
+                      ? (plano.cor === color.planPremium ? shadow.premium : shadow.primary)
+                      : 'none',
                   }}
                 >
                   {plano.cta}
@@ -217,14 +223,20 @@ export default function Landing() {
             {FAQ.map((item, i) => (
               <div
                 key={i}
-                style={s.faqItem}
+                style={{
+                  ...s.faqItem,
+                  borderColor: faqAberto === i ? color.primaryBorder : color.border,
+                  background:  faqAberto === i ? color.primaryMuted  : color.card,
+                }}
                 onClick={() => setFaqAberto(faqAberto === i ? null : i)}
               >
                 <div style={s.faqPergunta}>
                   <span style={s.faqTexto}>{item.q}</span>
                   <span style={s.faqSeta}>{faqAberto === i ? '−' : '+'}</span>
                 </div>
-                {faqAberto === i && <p style={s.faqResposta}>{item.a}</p>}
+                {faqAberto === i && (
+                  <p style={s.faqResposta}>{item.a}</p>
+                )}
               </div>
             ))}
           </div>
@@ -252,73 +264,159 @@ export default function Landing() {
   )
 }
 
-/* ── ESTILOS ── */
 const s = {
-  // Layout base
-  container:    { width: '100%', maxWidth: '1140px', margin: '0 auto', padding: '0 24px' },
+  container: { width: '100%', maxWidth: '1140px', margin: '0 auto', padding: '0 24px' },
 
   // Hero
-  hero:         { padding: '120px 0 100px', background: 'radial-gradient(ellipse 80% 60% at 50% -10%, rgba(99,102,241,0.25) 0%, transparent 70%), #0f1117' },
-  heroInner:    { maxWidth: '760px', margin: '0 auto', textAlign: 'center' },
-  heroBadge:    { display: 'inline-block', background: 'rgba(99,102,241,0.12)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.25)', fontSize: '13px', padding: '6px 18px', borderRadius: '100px', marginBottom: '32px', fontWeight: '500' },
-  heroTitulo:   { fontSize: 'clamp(40px, 5.5vw, 64px)', fontWeight: '800', lineHeight: 1.08, margin: '0 0 24px', letterSpacing: '-2px', color: '#f8fafc' },
+  hero: {
+    padding: '120px 0 100px',
+    background: `radial-gradient(ellipse 80% 60% at 50% -10%, rgba(99,102,241,0.20) 0%, transparent 70%), ${color.bg}`,
+  },
+  heroInner:  { maxWidth: '760px', margin: '0 auto', textAlign: 'center' },
+  heroBadge:  {
+    display: 'inline-block',
+    background: color.primaryMuted,
+    color: '#818cf8',
+    border: borda.primary,
+    fontSize: '13px', padding: '6px 18px',
+    borderRadius: '100px', marginBottom: '32px', fontWeight: '500',
+  },
+  heroTitulo: {
+    fontSize: 'clamp(40px, 5.5vw, 64px)', fontWeight: '800',
+    lineHeight: 1.08, margin: '0 0 24px',
+    letterSpacing: '-2px', color: color.textPrimary,
+  },
   heroDestaque: { color: '#818cf8' },
-  heroSub:      { fontSize: '18px', lineHeight: 1.75, color: '#94a3b8', maxWidth: '580px', margin: '0 auto 44px' },
-  heroBotoes:   { display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '24px', alignItems: 'center' },
-  heroNota:     { color: '#475569', fontSize: '13px' },
+  heroSub: {
+    fontSize: '18px', lineHeight: 1.75,
+    color: color.textMuted,
+    maxWidth: '580px', margin: '0 auto 44px',
+  },
+  heroBotoes: {
+    display: 'flex', gap: '14px', justifyContent: 'center',
+    flexWrap: 'wrap', marginBottom: '24px', alignItems: 'center',
+  },
+  heroNota: { color: color.textDisabled, fontSize: '13px' },
 
   // Números
-  numerosWrap:  { borderTop: '1px solid #1e293b', borderBottom: '1px solid #1e293b', background: '#0b0f1a' },
-  numerosGrid:  { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', maxWidth: '1140px', margin: '0 auto' },
-  numeroCard:   { padding: '36px 24px', textAlign: 'center', borderRight: '1px solid #1e293b', display: 'flex', flexDirection: 'column', gap: '8px' },
-  numeroValor:  { fontSize: '36px', fontWeight: '800', color: '#818cf8', letterSpacing: '-1px' },
-  numeroLabel:  { fontSize: '13px', color: '#64748b', lineHeight: 1.4 },
+  numerosWrap: {
+    borderTop: borda.base, borderBottom: borda.base,
+    background: color.surface,
+  },
+  numerosGrid: {
+    display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
+    maxWidth: '1140px', margin: '0 auto',
+  },
+  numeroCard: {
+    padding: '36px 24px', textAlign: 'center',
+    borderRight: borda.base,
+    display: 'flex', flexDirection: 'column', gap: '8px',
+  },
+  numeroValor: { fontSize: '36px', fontWeight: '800', color: '#818cf8', letterSpacing: '-1px' },
+  numeroLabel: { fontSize: '13px', color: color.textMuted, lineHeight: 1.4 },
 
   // Seções
-  secaoWrap:    { padding: '96px 0' },
-  secaoHeader:  { textAlign: 'center', marginBottom: '64px' },
-  secaoBadge:   { display: 'inline-block', color: '#818cf8', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '14px' },
-  secaoTitulo:  { fontSize: 'clamp(28px, 3.5vw, 42px)', fontWeight: '800', color: '#f8fafc', letterSpacing: '-1px', margin: '0 0 14px' },
-  secaoSub:     { color: '#64748b', fontSize: '16px', lineHeight: 1.6 },
+  secaoWrap:   { padding: '96px 0' },
+  secaoHeader: { textAlign: 'center', marginBottom: '64px' },
+  secaoBadge:  {
+    display: 'inline-block', color: '#818cf8',
+    fontSize: '11px', fontWeight: '700',
+    textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '14px',
+  },
+  secaoTitulo: {
+    fontSize: 'clamp(28px, 3.5vw, 42px)', fontWeight: '800',
+    color: color.textPrimary, letterSpacing: '-1px', margin: '0 0 14px',
+  },
+  secaoSub: { color: color.textMuted, fontSize: '16px', lineHeight: 1.6 },
 
   // Como funciona
-  passosGrid:   { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' },
-  passoCard:    { background: '#111827', border: '1px solid #1e293b', borderRadius: '16px', padding: '32px 28px', display: 'flex', flexDirection: 'column', gap: '12px' },
-  passoNum:     { fontSize: '52px', fontWeight: '900', color: '#1e293b', lineHeight: 1, letterSpacing: '-2px' },
-  passoIcone:   { fontSize: '28px' },
-  passoTitulo:  { fontSize: '16px', fontWeight: '700', color: '#f1f5f9' },
-  passoDesc:    { fontSize: '14px', color: '#64748b', lineHeight: 1.65 },
+  passosGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' },
+  passoCard:  {
+    background: color.card, border: borda.base,
+    borderRadius: radius.xl, padding: '32px 28px',
+    display: 'flex', flexDirection: 'column', gap: '12px',
+    boxShadow: shadow.card,
+  },
+  passoNum:    { fontSize: '52px', fontWeight: '900', color: color.hover, lineHeight: 1, letterSpacing: '-2px' },
+  passoIcone:  { fontSize: '28px' },
+  passoTitulo: { fontSize: '16px', fontWeight: '700', color: color.textPrimary },
+  passoDesc:   { fontSize: '14px', color: color.textMuted, lineHeight: 1.65 },
 
   // Planos
-  planosGrid:     { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', alignItems: 'stretch' },
-  planoCard:      { background: '#111827', border: '1px solid #1e293b', borderRadius: '20px', padding: '36px 32px', display: 'flex', flexDirection: 'column', gap: '28px', position: 'relative' },
-  planoDestaque:  { border: '1px solid rgba(99,102,241,0.6)', background: '#0f1130', boxShadow: '0 0 40px rgba(99,102,241,0.12)' },
-  popularBadge:   { position: 'absolute', top: '-14px', left: '50%', transform: 'translateX(-50%)', background: '#6366f1', color: '#fff', fontSize: '11px', fontWeight: '700', padding: '5px 18px', borderRadius: '100px', whiteSpace: 'nowrap', letterSpacing: '0.5px' },
+  planosGrid:    { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', alignItems: 'stretch' },
+  planoCard:     {
+    background: color.card, border: borda.base,
+    borderRadius: radius.xl, padding: '36px 32px',
+    display: 'flex', flexDirection: 'column', gap: '28px',
+    position: 'relative', boxShadow: shadow.card,
+  },
+  planoDestaque: {
+    border: `1px solid ${color.primaryBorder}`,
+    background: `linear-gradient(160deg, #0e1428 0%, ${color.card} 100%)`,
+    boxShadow: `0 0 40px rgba(99,102,241,0.15), ${shadow.card}`,
+  },
+  popularBadge: {
+    position: 'absolute', top: '-14px', left: '50%',
+    transform: 'translateX(-50%)',
+    background: color.primary, color: color.white,
+    fontSize: '11px', fontWeight: '700',
+    padding: '5px 18px', borderRadius: '100px',
+    whiteSpace: 'nowrap', letterSpacing: '0.5px',
+    boxShadow: shadow.primary,
+  },
   planoNome:      { fontSize: '14px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' },
   planoPrecoWrap: { display: 'flex', alignItems: 'baseline', gap: '6px' },
-  planoPreco:     { fontSize: '42px', fontWeight: '800', color: '#f8fafc', letterSpacing: '-1.5px' },
-  planoPrecoSub:  { fontSize: '15px', color: '#64748b' },
+  planoPreco:     { fontSize: '42px', fontWeight: '800', color: color.textPrimary, letterSpacing: '-1.5px' },
+  planoPrecoSub:  { fontSize: '15px', color: color.textMuted },
   planoLista:     { flex: 1, display: 'flex', flexDirection: 'column', gap: '14px' },
-  planoItem:      { display: 'flex', gap: '10px', alignItems: 'flex-start', fontSize: '14px', color: '#94a3b8', lineHeight: 1.5 },
-  planoItemOff:   { color: '#334155', textDecoration: 'line-through' },
-  check:          { color: '#22c55e', fontWeight: '700', flexShrink: 0, marginTop: '1px' },
-  planoBotao:     { width: '100%', border: '1.5px solid', borderRadius: '12px', padding: '14px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', transition: 'opacity 0.2s', letterSpacing: '0.3px' },
+  planoItem:      { display: 'flex', gap: '10px', alignItems: 'flex-start', fontSize: '14px', lineHeight: 1.5 },
+  planoItemOff:   { textDecoration: 'line-through' },
+  check:          { color: color.success, fontWeight: '700', flexShrink: 0, marginTop: '1px' },
+  planoBotao: {
+    width: '100%', border: '1.5px solid',
+    borderRadius: radius.md, padding: '14px',
+    fontSize: '14px', fontWeight: '700',
+    cursor: 'pointer', transition: transition.fast,
+    letterSpacing: '0.3px', fontFamily: 'system-ui, -apple-system, sans-serif',
+  },
 
   // FAQ
-  faqLista:     { maxWidth: '740px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '10px' },
-  faqItem:      { background: '#111827', border: '1px solid #1e293b', borderRadius: '12px', padding: '22px 28px', cursor: 'pointer', userSelect: 'none' },
-  faqPergunta:  { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '20px' },
-  faqTexto:     { color: '#e2e8f0', fontSize: '15px', fontWeight: '500', lineHeight: 1.5 },
-  faqSeta:      { color: '#6366f1', fontSize: '20px', fontWeight: '300', flexShrink: 0 },
-  faqResposta:  { color: '#64748b', fontSize: '14px', lineHeight: 1.75, marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #1e293b' },
+  faqLista:    { maxWidth: '740px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '10px' },
+  faqItem:     {
+    border: '1px solid', borderRadius: radius.lg,
+    padding: '22px 28px', cursor: 'pointer', userSelect: 'none',
+    transition: transition.fast,
+  },
+  faqPergunta: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '20px' },
+  faqTexto:    { color: color.textPrimary, fontSize: '15px', fontWeight: '500', lineHeight: 1.5 },
+  faqSeta:     { color: color.primary, fontSize: '20px', fontWeight: '300', flexShrink: 0 },
+  faqResposta: { color: color.textMuted, fontSize: '14px', lineHeight: 1.75, marginTop: '16px', paddingTop: '16px', borderTop: borda.base },
 
   // CTA Final
-  ctaWrap:      { padding: '120px 0', background: 'radial-gradient(ellipse 80% 60% at 50% 100%, rgba(99,102,241,0.2) 0%, transparent 70%), #0b0f1a' },
-  ctaInner:     { textAlign: 'center', maxWidth: '640px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' },
-  ctaTitulo:    { fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: '800', color: '#f8fafc', letterSpacing: '-1.5px', lineHeight: 1.1 },
-  ctaSub:       { color: '#94a3b8', fontSize: '17px', lineHeight: 1.6 },
+  ctaWrap: {
+    padding: '120px 0',
+    background: `radial-gradient(ellipse 80% 60% at 50% 100%, rgba(99,102,241,0.18) 0%, transparent 70%), ${color.bg}`,
+  },
+  ctaInner: {
+    textAlign: 'center', maxWidth: '640px', margin: '0 auto',
+    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px',
+  },
+  ctaTitulo: { fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: '800', color: color.textPrimary, letterSpacing: '-1.5px', lineHeight: 1.1 },
+  ctaSub:    { color: color.textMuted, fontSize: '17px', lineHeight: 1.6 },
 
   // Botões
-  btnPrimario:  { background: '#6366f1', color: '#fff', border: 'none', borderRadius: '12px', padding: '16px 36px', fontSize: '15px', fontWeight: '700', cursor: 'pointer', letterSpacing: '0.3px' },
-  btnGhost:     { color: '#94a3b8', fontSize: '15px', padding: '16px 8px', display: 'inline-flex', alignItems: 'center', gap: '6px' },
+  btnPrimario: {
+    background: color.primary, color: color.white,
+    border: 'none', borderRadius: radius.lg,
+    padding: '16px 36px', fontSize: '15px', fontWeight: '700',
+    cursor: 'pointer', letterSpacing: '0.3px',
+    boxShadow: shadow.primary, transition: transition.fast,
+    fontFamily: 'system-ui, -apple-system, sans-serif',
+  },
+  btnGhost: {
+    color: color.textMuted, fontSize: '15px',
+    padding: '16px 8px', display: 'inline-flex',
+    alignItems: 'center', gap: '6px', textDecoration: 'none',
+    transition: transition.fast,
+  },
 }

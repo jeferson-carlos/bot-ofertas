@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
+import { color, shadow, radius, transition } from '../../theme'
 
 const PLANO_LABEL = { free: 'Free', pro: 'Pro', premium: 'Premium' }
-const PLANO_COR   = { free: '#64748b', pro: '#6366f1', premium: '#f59e0b' }
+const PLANO_COR   = { free: color.planFree, pro: color.planPro, premium: color.planPremium }
 
 const ICONS = {
   dashboard: (
@@ -89,7 +90,6 @@ export default function AppLayout({ children }) {
     return () => window.removeEventListener('resize', onResize)
   }, [])
 
-  // Fechar sidebar ao navegar no mobile
   useEffect(() => { setSidebarAberta(false) }, [location.pathname])
 
   const isMobile = largura < 768
@@ -121,7 +121,10 @@ export default function AppLayout({ children }) {
       <NavLink
         key={item.path}
         to={item.path}
-        style={({ isActive }) => ({ ...s.navItem, ...(isActive ? s.navItemAtivo : {}) })}
+        style={({ isActive }) => ({
+          ...s.navItem,
+          ...(isActive ? s.navItemAtivo : {}),
+        })}
       >
         <span style={s.navIcone}>{item.icon}</span>
         <span style={s.navTexto}>{item.label}</span>
@@ -139,7 +142,12 @@ export default function AppLayout({ children }) {
           <span style={s.logoTexto}>PropagAI</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ ...s.planoBadge, background: PLANO_COR[plano] + '22', color: PLANO_COR[plano], border: `1px solid ${PLANO_COR[plano]}44` }}>
+          <span style={{
+            ...s.planoBadge,
+            background: PLANO_COR[plano] + '1a',
+            color: PLANO_COR[plano],
+            border: `1px solid ${PLANO_COR[plano]}44`,
+          }}>
             {PLANO_LABEL[plano]}
           </span>
           {isMobile && (
@@ -157,15 +165,15 @@ export default function AppLayout({ children }) {
       </nav>
 
       {/* Navegação inferior */}
-      <nav style={{ ...s.nav, borderTop: '1px solid #1e293b', paddingTop: '16px', flex: 'none' }}>
+      <nav style={{ ...s.nav, borderTop: `1px solid ${color.border}`, paddingTop: '16px', flex: 'none' }}>
         <p style={s.navLabel}>Conta</p>
         {MENU_INFERIOR.map(renderItem)}
       </nav>
 
-      {/* Upgrade banner para free */}
+      {/* Upgrade banner */}
       {plano === 'free' && (
         <div style={s.upgradeBanner}>
-          <p style={s.upgradeTexto}>Desbloqueie o plano <strong>Pro</strong> e automatize tudo.</p>
+          <p style={s.upgradeTexto}>Desbloqueie o plano <strong style={{ color: color.primary }}>Pro</strong> e automatize tudo.</p>
           <button onClick={() => navigate('/app/planos')} style={s.upgradeBotao}>
             Ver planos →
           </button>
@@ -200,10 +208,8 @@ export default function AppLayout({ children }) {
         </header>
       )}
 
-      {/* Sidebar desktop — sempre visível */}
       {!isMobile && sidebar}
 
-      {/* Sidebar mobile — overlay */}
       {isMobile && sidebarAberta && (
         <>
           <div style={s.overlay} onClick={() => setSidebarAberta(false)} />
@@ -219,42 +225,158 @@ export default function AppLayout({ children }) {
 }
 
 const s = {
-  container:        { display: 'flex', height: '100vh', background: '#0b0f1a', fontFamily: 'system-ui, sans-serif' },
+  container: {
+    display: 'flex', height: '100vh',
+    background: color.bg,
+    fontFamily: 'system-ui, -apple-system, sans-serif',
+  },
 
-  sidebar:          { width: '240px', height: '100vh', position: 'sticky', top: 0, background: '#0f1117', borderRight: '1px solid #1e293b', display: 'flex', flexDirection: 'column', flexShrink: 0, overflowY: 'auto' },
-  sidebarMobile:    { position: 'fixed', top: 0, left: 0, height: '100vh', zIndex: 200, boxShadow: '4px 0 32px rgba(0,0,0,0.5)' },
+  sidebar: {
+    width: '240px', height: '100vh',
+    position: 'sticky', top: 0,
+    background: color.surface,
+    borderRight: `1px solid ${color.border}`,
+    display: 'flex', flexDirection: 'column',
+    flexShrink: 0, overflowY: 'auto',
+  },
+  sidebarMobile: {
+    position: 'fixed', top: 0, left: 0, height: '100vh',
+    zIndex: 200, boxShadow: shadow.sidebar,
+  },
 
-  topbar:           { display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#0f1117', borderBottom: '1px solid #1e293b', padding: '0 16px', height: '56px', flexShrink: 0, position: 'sticky', top: 0, zIndex: 100 },
-  topbarMarca:      { display: 'flex', alignItems: 'center', gap: '10px' },
-  hamburgerBtn:     { background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px' },
-  fecharBtn:        { background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', padding: '6px', display: 'flex', alignItems: 'center', borderRadius: '6px' },
+  topbar: {
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    background: color.surface,
+    borderBottom: `1px solid ${color.border}`,
+    padding: '0 16px', height: '56px',
+    flexShrink: 0, position: 'sticky', top: 0, zIndex: 100,
+  },
+  topbarMarca:  { display: 'flex', alignItems: 'center', gap: '10px' },
+  hamburgerBtn: {
+    background: 'transparent', border: 'none',
+    color: color.textSecondary, cursor: 'pointer',
+    padding: '8px', display: 'flex', alignItems: 'center',
+    justifyContent: 'center', borderRadius: radius.md,
+  },
+  fecharBtn: {
+    background: 'transparent', border: 'none',
+    color: color.textMuted, cursor: 'pointer',
+    padding: '6px', display: 'flex', alignItems: 'center',
+    borderRadius: radius.sm,
+  },
 
-  overlay:          { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 199, backdropFilter: 'blur(2px)' },
+  overlay: {
+    position: 'fixed', inset: 0,
+    background: color.overlayBg,
+    zIndex: 199, backdropFilter: 'blur(4px)',
+  },
 
-  logoWrap:         { padding: '20px 20px 16px', borderBottom: '1px solid #1e293b', display: 'flex', flexDirection: 'column', gap: '10px' },
-  logoMarca:        { display: 'flex', alignItems: 'center', gap: '10px' },
-  logoIcone:        { width: '28px', height: '28px', background: 'linear-gradient(135deg, #6366f1, #818cf8)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '800', fontSize: '14px', flexShrink: 0 },
-  logoTexto:        { color: '#f1f5f9', fontSize: '16px', fontWeight: '700', letterSpacing: '-0.3px' },
-  planoBadge:       { alignSelf: 'flex-start', fontSize: '10px', fontWeight: '700', padding: '3px 10px', borderRadius: '100px', textTransform: 'uppercase', letterSpacing: '0.8px' },
+  logoWrap: {
+    padding: '20px 20px 16px',
+    borderBottom: `1px solid ${color.border}`,
+    display: 'flex', flexDirection: 'column', gap: '10px',
+  },
+  logoMarca:  { display: 'flex', alignItems: 'center', gap: '10px' },
+  logoIcone: {
+    width: '28px', height: '28px',
+    background: `linear-gradient(135deg, ${color.primary}, #818cf8)`,
+    borderRadius: radius.md,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    color: color.white, fontWeight: '800', fontSize: '14px', flexShrink: 0,
+  },
+  logoTexto: {
+    color: color.textPrimary, fontSize: '16px',
+    fontWeight: '700', letterSpacing: '-0.3px',
+  },
+  planoBadge: {
+    alignSelf: 'flex-start',
+    fontSize: '10px', fontWeight: '700',
+    padding: '3px 10px', borderRadius: '100px',
+    textTransform: 'uppercase', letterSpacing: '0.8px',
+  },
 
-  nav:              { flex: 1, padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: '2px' },
-  navLabel:         { color: '#374151', fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.2px', padding: '0 8px', marginBottom: '6px' },
-  navItem:          { display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 12px', color: '#64748b', textDecoration: 'none', fontSize: '14px', borderRadius: '8px', transition: 'all 0.15s', fontWeight: '500' },
-  navItemAtivo:     { color: '#f1f5f9', background: '#1e293b' },
-  navItemBloqueado: { display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 12px', color: '#374151', fontSize: '14px', borderRadius: '8px', background: 'transparent', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left', fontFamily: 'inherit', fontWeight: '500' },
-  navIcone:         { flexShrink: 0, display: 'flex' },
-  navTexto:         { flex: 1 },
-  lockWrap:         { color: '#374151', display: 'flex' },
+  nav: {
+    flex: 1, padding: '16px 10px',
+    display: 'flex', flexDirection: 'column', gap: '2px',
+  },
+  navLabel: {
+    color: color.textMuted,
+    fontSize: '10px', fontWeight: '700',
+    textTransform: 'uppercase', letterSpacing: '1.2px',
+    padding: '0 10px', marginBottom: '6px',
+  },
+  navItem: {
+    display: 'flex', alignItems: 'center', gap: '10px',
+    padding: '9px 10px',
+    color: color.textMuted,
+    textDecoration: 'none', fontSize: '14px',
+    borderRadius: radius.md, fontWeight: '500',
+    transition: transition.fast,
+    borderLeft: '2px solid transparent',
+  },
+  navItemAtivo: {
+    color: color.textPrimary,
+    background: color.hover,
+    borderLeft: `2px solid ${color.primary}`,
+    fontWeight: '600',
+  },
+  navItemBloqueado: {
+    display: 'flex', alignItems: 'center', gap: '10px',
+    padding: '9px 10px',
+    color: color.textDisabled,
+    fontSize: '14px', borderRadius: radius.md,
+    background: 'transparent', border: 'none',
+    cursor: 'pointer', width: '100%',
+    textAlign: 'left', fontFamily: 'inherit', fontWeight: '500',
+    borderLeft: '2px solid transparent',
+  },
+  navIcone: { flexShrink: 0, display: 'flex' },
+  navTexto: { flex: 1 },
+  lockWrap: { color: color.textDisabled, display: 'flex' },
 
-  upgradeBanner:    { margin: '0 12px 12px', background: 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(129,140,248,0.08))', border: '1px solid rgba(99,102,241,0.25)', borderRadius: '12px', padding: '16px' },
-  upgradeTexto:     { color: '#94a3b8', fontSize: '12px', lineHeight: 1.5, marginBottom: '10px' },
-  upgradeBotao:     { background: '#6366f1', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 14px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', width: '100%', fontFamily: 'inherit' },
+  upgradeBanner: {
+    margin: '0 10px 12px',
+    background: color.primaryMuted,
+    border: `1px solid ${color.primaryBorder}`,
+    borderRadius: radius.lg, padding: '16px',
+  },
+  upgradeTexto: {
+    color: color.textSecondary, fontSize: '12px',
+    lineHeight: 1.6, marginBottom: '10px',
+  },
+  upgradeBotao: {
+    background: color.primary, color: color.white,
+    border: 'none', borderRadius: radius.md,
+    padding: '8px 14px', fontSize: '12px', fontWeight: '700',
+    cursor: 'pointer', width: '100%', fontFamily: 'inherit',
+    boxShadow: shadow.primary,
+  },
 
-  userWrap:         { padding: '14px 16px', borderTop: '1px solid #1e293b', display: 'flex', alignItems: 'center', gap: '10px' },
-  userAvatar:       { width: '32px', height: '32px', background: '#1e293b', border: '1px solid #374151', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '13px', fontWeight: '700', flexShrink: 0 },
-  userInfo:         { flex: 1, minWidth: 0 },
-  userEmail:        { color: '#64748b', fontSize: '11px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '2px' },
-  sairLink:         { background: 'none', border: 'none', color: '#475569', fontSize: '11px', cursor: 'pointer', padding: 0, fontFamily: 'inherit' },
+  userWrap: {
+    padding: '14px 16px',
+    borderTop: `1px solid ${color.border}`,
+    display: 'flex', alignItems: 'center', gap: '10px',
+  },
+  userAvatar: {
+    width: '32px', height: '32px',
+    background: color.hover,
+    border: `1px solid ${color.border}`,
+    borderRadius: '50%',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    color: color.textSecondary, fontSize: '13px', fontWeight: '700', flexShrink: 0,
+  },
+  userInfo:  { flex: 1, minWidth: 0 },
+  userEmail: {
+    color: color.textMuted, fontSize: '11px',
+    overflow: 'hidden', textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap', marginBottom: '2px',
+  },
+  sairLink: {
+    background: 'none', border: 'none',
+    color: color.textDisabled, fontSize: '11px',
+    cursor: 'pointer', padding: 0, fontFamily: 'inherit',
+    transition: transition.fast,
+  },
 
-  main:             { flex: 1, overflowY: 'auto', minWidth: 0 },
+  main: { flex: 1, overflowY: 'auto', minWidth: 0 },
 }
