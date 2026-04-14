@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../supabaseClient'
 import { useAuth } from '../../contexts/AuthContext'
+import FeatureBloqueada from '../../components/FeatureBloqueada'
 import { color, shadow, radius, borda, transition } from '../../theme'
 
 const CAMPOS_VAZIO = {
@@ -53,6 +54,7 @@ export default function Configuracoes() {
   const [form, setForm]         = useState(CAMPOS_VAZIO)
   const [blacklist, setBlacklist] = useState([])
   const [novoTermo, setNovoTermo] = useState('')
+  const [autoEnviar, setAutoEnviar] = useState(false)
   const [loading, setLoading]   = useState(true)
   const [salvando, setSalvando] = useState(false)
   const [salvo, setSalvo]       = useState(false)
@@ -69,7 +71,7 @@ export default function Configuracoes() {
   async function carregar() {
     const { data } = await supabase
       .from('profiles')
-      .select('telegram_bot_token, telegram_chat_id, shopee_app_id, shopee_secret, telegram_template, blacklist_termos')
+      .select('telegram_bot_token, telegram_chat_id, shopee_app_id, shopee_secret, telegram_template, blacklist_termos, auto_enviar')
       .eq('id', user.id)
       .single()
 
@@ -82,6 +84,7 @@ export default function Configuracoes() {
         telegram_template:  data.telegram_template   || '',
       })
       setBlacklist(data.blacklist_termos || [])
+      setAutoEnviar(data.auto_enviar ?? false)
     }
     setLoading(false)
   }
@@ -172,6 +175,7 @@ export default function Configuracoes() {
         shopee_secret:      form.shopee_secret.trim()       || null,
         telegram_template:  form.telegram_template.trim()   || null,
         blacklist_termos:   blacklist,
+        auto_enviar:        autoEnviar,
       })
       .eq('id', user.id)
 
@@ -423,6 +427,56 @@ export default function Configuracoes() {
             )}
           </div>
 
+          {/* Envio Automático — Pro/Premium */}
+          <FeatureBloqueada plano="pro">
+            <div style={s.bloco}>
+              <div style={s.blocoHeader}>
+                <div style={{ ...s.blocoIcone, background: color.primaryMuted }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                  </svg>
+                </div>
+                <div>
+                  <p style={s.blocoTitulo}>Envio Automático</p>
+                  <p style={s.blocoSub}>Envia ofertas pendentes direto no Telegram</p>
+                </div>
+                <div style={{
+                  ...s.statusPill,
+                  background: autoEnviar ? color.successMuted : `rgba(100,116,139,0.12)`,
+                  color: autoEnviar ? color.success : color.textMuted,
+                  border: autoEnviar ? borda.success : borda.base,
+                }}>
+                  {autoEnviar ? '● Ativado' : '○ Inativo'}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                <button
+                  type="button"
+                  onClick={() => { setAutoEnviar(v => !v); setSalvo(false) }}
+                  style={{
+                    background: 'transparent',
+                    border: `1px solid ${autoEnviar ? color.warning + '55' : color.success + '55'}`,
+                    color: autoEnviar ? color.warning : color.success,
+                    borderRadius: radius.sm,
+                    padding: '6px 16px', cursor: 'pointer',
+                    fontSize: '12px', fontWeight: '600', fontFamily: 'inherit',
+                    transition: transition.fast,
+                  }}
+                >
+                  {autoEnviar ? 'Desativar' : 'Ativar'}
+                </button>
+              </div>
+
+              <div style={s.autoEnviarInfo}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '1px' }}>
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                O envio automático dispara a cada 5 minutos, enviando 2 produtos por vez para o seu canal.
+              </div>
+            </div>
+          </FeatureBloqueada>
+
           {erro && (
             <div style={s.erroBox}>
               <span>⚠</span> {erro}
@@ -548,6 +602,13 @@ const s = {
     background: 'none', border: 'none',
     color: color.dangerStrong, cursor: 'pointer',
     padding: 0, fontSize: '12px', lineHeight: 1, display: 'flex', alignItems: 'center',
+  },
+
+  autoEnviarInfo: {
+    display: 'flex', alignItems: 'flex-start', gap: '8px',
+    color: color.textMuted, fontSize: '12px', lineHeight: '1.5',
+    background: `rgba(99,102,241,0.06)`, border: borda.base,
+    borderRadius: radius.md, padding: '10px 14px',
   },
 
   erroBox: {

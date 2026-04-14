@@ -34,6 +34,7 @@ const PLANOS = [
       { ok: true, texto: '5 buscas manuais por dia' },
       { ok: true, texto: 'Credenciais próprias Shopee' },
       { ok: true, texto: 'Canal Telegram próprio' },
+      { ok: true, texto: 'Auto-envio para Telegram (2 ofertas a cada 5 min)' },
       { ok: false, texto: 'Keywords ilimitadas' },
       { ok: false, texto: 'Suporte prioritário' },
     ],

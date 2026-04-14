@@ -205,9 +205,21 @@ export default function Dashboard() {
               : 'Bot inativo — credenciais não configuradas'}
           </span>
         </div>
-        {credenciaisOk && (
-          <span style={s.botProxima}>Próxima: {proximaExecucao()}</span>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          {temAcesso('pro') && (
+            <span style={{
+              fontSize: '11px', fontWeight: '600', padding: '3px 10px', borderRadius: '100px',
+              background: profile?.auto_enviar ? color.successMuted : `rgba(100,116,139,0.12)`,
+              color:      profile?.auto_enviar ? color.success       : color.textMuted,
+              border:     profile?.auto_enviar ? borda.success       : borda.base,
+            }}>
+              {profile?.auto_enviar ? '⚡ Auto-envio ativo · 2 ofertas / 5min' : '○ Auto-envio inativo'}
+            </span>
+          )}
+          {credenciaisOk && (
+            <span style={s.botProxima}>Próxima coleta: {proximaExecucao()}</span>
+          )}
+        </div>
       </div>
 
       <div style={s.gridInferior}>
