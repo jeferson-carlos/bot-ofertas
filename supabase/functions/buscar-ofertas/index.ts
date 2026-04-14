@@ -203,7 +203,7 @@ async function processarUsuarioCron(userId: string, appId: string, secret: strin
   return executarBuscas(lista, userId, blacklist, appId, secret)
 }
 
-// Manual: keywords ativas do usuário se existirem, senão "oferta" (padrão)
+// Manual: busca apenas pelas keywords ativas do usuário (sem fallback)
 async function processarUsuarioManual(userId: string, appId: string, secret: string): Promise<{ novos: number; duplicatas: number }> {
   const [kwResult, perfilResult] = await Promise.all([
     supabase.from("keywords").select("keyword, sort_type").eq("user_id", userId).eq("ativo", true),
@@ -213,11 +213,7 @@ async function processarUsuarioManual(userId: string, appId: string, secret: str
   const keywords  = kwResult.data ?? []
   const blacklist = (perfilResult.data?.blacklist_termos ?? []) as string[]
 
-  const lista = keywords.length > 0
-    ? keywords
-    : [{ keyword: "oferta", sort_type: 2 }]
-
-  return executarBuscas(lista, userId, blacklist, appId, secret)
+  return executarBuscas(keywords, userId, blacklist, appId, secret)
 }
 
 Deno.serve(async (req) => {
