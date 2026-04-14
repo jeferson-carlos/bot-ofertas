@@ -152,20 +152,14 @@ async function registrarColeta(userId: string) {
     .eq("id", userId)
 }
 
-// Processa um único usuário: busca suas keywords usando suas credenciais
-async function processarUsuario(userId: string, appId: string, secret: string): Promise<{ novos: number; duplicatas: number }> {
-  const [kwResult, perfilResult] = await Promise.all([
-    supabase.from("keywords").select("keyword, sort_type").eq("user_id", userId).eq("ativo", true),
-    supabase.from("profiles").select("blacklist_termos").eq("id", userId).single(),
-  ])
-
-  const keywords  = kwResult.data
-  const blacklist = (perfilResult.data?.blacklist_termos ?? []) as string[]
-
-  const lista = keywords && keywords.length > 0
-    ? keywords
-    : [{ keyword: "oferta", sort_type: 2 }]
-
+// Busca pela lista fornecida e salva os resultados para o usuário
+async function executarBuscas(
+  lista: { keyword: string; sort_type: number }[],
+  userId: string,
+  blacklist: string[],
+  appId: string,
+  secret: string
+): Promise<{ novos: number; duplicatas: number }> {
   const unique = Object.values(
     lista.reduce((acc: any, k: any) => ({ ...acc, [k.keyword]: k }), {})
   ) as { keyword: string; sort_type: number }[]
@@ -189,6 +183,41 @@ async function processarUsuario(userId: string, appId: string, secret: string): 
   }
 
   return { novos: totalNovos, duplicatas: totalDuplicatas }
+}
+
+// Cron: sempre busca "oferta" (padrão) + keywords ativas do usuário, se existirem
+async function processarUsuarioCron(userId: string, appId: string, secret: string): Promise<{ novos: number; duplicatas: number }> {
+  const [kwResult, perfilResult] = await Promise.all([
+    supabase.from("keywords").select("keyword, sort_type").eq("user_id", userId).eq("ativo", true),
+    supabase.from("profiles").select("blacklist_termos").eq("id", userId).single(),
+  ])
+
+  const keywords  = kwResult.data ?? []
+  const blacklist = (perfilResult.data?.blacklist_termos ?? []) as string[]
+
+  const lista = [
+    { keyword: "oferta", sort_type: 2 },
+    ...keywords,
+  ]
+
+  return executarBuscas(lista, userId, blacklist, appId, secret)
+}
+
+// Manual: keywords ativas do usuário se existirem, senão "oferta" (padrão)
+async function processarUsuarioManual(userId: string, appId: string, secret: string): Promise<{ novos: number; duplicatas: number }> {
+  const [kwResult, perfilResult] = await Promise.all([
+    supabase.from("keywords").select("keyword, sort_type").eq("user_id", userId).eq("ativo", true),
+    supabase.from("profiles").select("blacklist_termos").eq("id", userId).single(),
+  ])
+
+  const keywords  = kwResult.data ?? []
+  const blacklist = (perfilResult.data?.blacklist_termos ?? []) as string[]
+
+  const lista = keywords.length > 0
+    ? keywords
+    : [{ keyword: "oferta", sort_type: 2 }]
+
+  return executarBuscas(lista, userId, blacklist, appId, secret)
 }
 
 Deno.serve(async (req) => {
@@ -237,7 +266,7 @@ Deno.serve(async (req) => {
         )
       }
 
-      const { novos, duplicatas } = await processarUsuario(userId, appId, secret)
+      const { novos, duplicatas } = await processarUsuarioManual(userId, appId, secret)
       await registrarColeta(userId)
 
       return Response.json(
@@ -261,7 +290,7 @@ Deno.serve(async (req) => {
       // Processa usuários com credenciais próprias
       for (const u of usuarios) {
         console.log(`👤 Processando usuário ${u.id}`)
-        const { novos, duplicatas } = await processarUsuario(u.id, u.shopee_app_id, u.shopee_secret)
+        const { novos, duplicatas } = await processarUsuarioCron(u.id, u.shopee_app_id, u.shopee_secret)
         await registrarColeta(u.id)
         totalNovos      += novos
         totalDuplicatas += duplicatas
