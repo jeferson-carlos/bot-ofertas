@@ -208,6 +208,64 @@ export default function Configuracoes() {
       ) : (
         <form onSubmit={salvar} style={s.form}>
 
+          {/* Bloco Shopee */}
+          <div style={s.bloco}>
+            <div style={s.blocoHeader}>
+              <div style={{ ...s.blocoIcone, background: color.warningMuted }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color.warning} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>
+                </svg>
+              </div>
+              <div>
+                <p style={s.blocoTitulo}>Shopee Afiliados</p>
+                <p style={s.blocoSub}>Credenciais para gerar links com sua comissão</p>
+              </div>
+              <div style={{
+                ...s.statusPill,
+                background: shopeeOk ? color.successMuted : `rgba(100,116,139,0.12)`,
+                color: shopeeOk ? color.success : color.textMuted,
+                border: shopeeOk ? borda.success : borda.base,
+              }}>
+                {shopeeOk ? '● Configurado' : '○ Pendente'}
+              </div>
+            </div>
+
+            <div style={s.campos}>
+              <div style={s.campoGrupo}>
+                <label style={s.label}>App ID</label>
+                <input
+                  type="text"
+                  placeholder="123456789"
+                  value={form.shopee_app_id}
+                  onChange={e => atualizar('shopee_app_id', e.target.value)}
+                  style={s.input}
+                />
+                <p style={s.dica}>Disponível no portal Shopee Afiliados → API</p>
+              </div>
+              <div style={s.campoGrupo}>
+                <label style={s.label}>Secret Key</label>
+                <input
+                  type="password"
+                  placeholder="••••••••••••••••"
+                  value={form.shopee_secret}
+                  onChange={e => atualizar('shopee_secret', e.target.value)}
+                  style={s.input}
+                />
+                <p style={s.dica}>Chave secreta gerada junto com o App ID</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Teste Shopee */}
+          <div style={s.testeWrap}>
+            <p style={{ ...s.dica, marginBottom: '8px' }}>Salve as configurações antes de testar.</p>
+            <button type="button" onClick={testarShopee} disabled={testandoShopee} style={testandoShopee ? s.botaoTestarDisabled : s.botaoTestar}>
+              {testandoShopee ? 'Testando...' : 'Testar conexão Shopee'}
+            </button>
+            {testeShopeeOk   && <span style={s.testeSucesso}>✓ {testeShopeeOk}</span>}
+            {testeShopeeErro && <span style={s.testeErro}>✗ {testeShopeeErro}</span>}
+          </div>
+
           {/* Bloco Telegram */}
           <div style={s.bloco}>
             <div style={s.blocoHeader}>
@@ -264,6 +322,56 @@ export default function Configuracoes() {
             {testeOk   && <span style={s.testeSucesso}>✓ {testeOk}</span>}
             {testeErro && <span style={s.testeErro}>✗ {testeErro}</span>}
           </div>
+
+          {/* Envio Automático — Pro/Premium */}
+          <FeatureBloqueada plano="pro">
+            <div style={s.bloco}>
+              <div style={s.blocoHeader}>
+                <div style={{ ...s.blocoIcone, background: color.primaryMuted }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                  </svg>
+                </div>
+                <div>
+                  <p style={s.blocoTitulo}>Envio Automático</p>
+                  <p style={s.blocoSub}>Envia ofertas pendentes direto no Telegram</p>
+                </div>
+                <div style={{
+                  ...s.statusPill,
+                  background: autoEnviar ? color.successMuted : `rgba(100,116,139,0.12)`,
+                  color: autoEnviar ? color.success : color.textMuted,
+                  border: autoEnviar ? borda.success : borda.base,
+                }}>
+                  {autoEnviar ? '● Ativado' : '○ Inativo'}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                <button
+                  type="button"
+                  onClick={() => { setAutoEnviar(v => !v); setSalvo(false) }}
+                  style={{
+                    background: 'transparent',
+                    border: `1px solid ${autoEnviar ? color.warning + '55' : color.success + '55'}`,
+                    color: autoEnviar ? color.warning : color.success,
+                    borderRadius: radius.sm,
+                    padding: '6px 16px', cursor: 'pointer',
+                    fontSize: '12px', fontWeight: '600', fontFamily: 'inherit',
+                    transition: transition.fast,
+                  }}
+                >
+                  {autoEnviar ? 'Desativar' : 'Ativar'}
+                </button>
+              </div>
+
+              <div style={s.autoEnviarInfo}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '1px' }}>
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                O envio automático dispara a cada 5 minutos, enviando 2 produtos por vez para o seu canal.
+              </div>
+            </div>
+          </FeatureBloqueada>
 
           {/* Template — Pro/Premium */}
           {temAcesso('pro') && (
@@ -327,64 +435,6 @@ export default function Configuracoes() {
             </div>
           )}
 
-          {/* Bloco Shopee */}
-          <div style={s.bloco}>
-            <div style={s.blocoHeader}>
-              <div style={{ ...s.blocoIcone, background: color.warningMuted }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color.warning} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>
-                </svg>
-              </div>
-              <div>
-                <p style={s.blocoTitulo}>Shopee Afiliados</p>
-                <p style={s.blocoSub}>Credenciais para gerar links com sua comissão</p>
-              </div>
-              <div style={{
-                ...s.statusPill,
-                background: shopeeOk ? color.successMuted : `rgba(100,116,139,0.12)`,
-                color: shopeeOk ? color.success : color.textMuted,
-                border: shopeeOk ? borda.success : borda.base,
-              }}>
-                {shopeeOk ? '● Configurado' : '○ Pendente'}
-              </div>
-            </div>
-
-            <div style={s.campos}>
-              <div style={s.campoGrupo}>
-                <label style={s.label}>App ID</label>
-                <input
-                  type="text"
-                  placeholder="123456789"
-                  value={form.shopee_app_id}
-                  onChange={e => atualizar('shopee_app_id', e.target.value)}
-                  style={s.input}
-                />
-                <p style={s.dica}>Disponível no portal Shopee Afiliados → API</p>
-              </div>
-              <div style={s.campoGrupo}>
-                <label style={s.label}>Secret Key</label>
-                <input
-                  type="password"
-                  placeholder="••••••••••••••••"
-                  value={form.shopee_secret}
-                  onChange={e => atualizar('shopee_secret', e.target.value)}
-                  style={s.input}
-                />
-                <p style={s.dica}>Chave secreta gerada junto com o App ID</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Teste Shopee */}
-          <div style={s.testeWrap}>
-            <p style={{ ...s.dica, marginBottom: '8px' }}>Salve as configurações antes de testar.</p>
-            <button type="button" onClick={testarShopee} disabled={testandoShopee} style={testandoShopee ? s.botaoTestarDisabled : s.botaoTestar}>
-              {testandoShopee ? 'Testando...' : 'Testar conexão Shopee'}
-            </button>
-            {testeShopeeOk   && <span style={s.testeSucesso}>✓ {testeShopeeOk}</span>}
-            {testeShopeeErro && <span style={s.testeErro}>✗ {testeShopeeErro}</span>}
-          </div>
-
           {/* Blacklist */}
           <div style={s.bloco}>
             <div style={s.blocoHeader}>
@@ -426,56 +476,6 @@ export default function Configuracoes() {
               <p style={s.dica}>Nenhum termo bloqueado. Ofertas com esses termos no título ou loja serão ignoradas.</p>
             )}
           </div>
-
-          {/* Envio Automático — Pro/Premium */}
-          <FeatureBloqueada plano="pro">
-            <div style={s.bloco}>
-              <div style={s.blocoHeader}>
-                <div style={{ ...s.blocoIcone, background: color.primaryMuted }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-                  </svg>
-                </div>
-                <div>
-                  <p style={s.blocoTitulo}>Envio Automático</p>
-                  <p style={s.blocoSub}>Envia ofertas pendentes direto no Telegram</p>
-                </div>
-                <div style={{
-                  ...s.statusPill,
-                  background: autoEnviar ? color.successMuted : `rgba(100,116,139,0.12)`,
-                  color: autoEnviar ? color.success : color.textMuted,
-                  border: autoEnviar ? borda.success : borda.base,
-                }}>
-                  {autoEnviar ? '● Ativado' : '○ Inativo'}
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                <button
-                  type="button"
-                  onClick={() => { setAutoEnviar(v => !v); setSalvo(false) }}
-                  style={{
-                    background: 'transparent',
-                    border: `1px solid ${autoEnviar ? color.warning + '55' : color.success + '55'}`,
-                    color: autoEnviar ? color.warning : color.success,
-                    borderRadius: radius.sm,
-                    padding: '6px 16px', cursor: 'pointer',
-                    fontSize: '12px', fontWeight: '600', fontFamily: 'inherit',
-                    transition: transition.fast,
-                  }}
-                >
-                  {autoEnviar ? 'Desativar' : 'Ativar'}
-                </button>
-              </div>
-
-              <div style={s.autoEnviarInfo}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '1px' }}>
-                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
-                O envio automático dispara a cada 5 minutos, enviando 2 produtos por vez para o seu canal.
-              </div>
-            </div>
-          </FeatureBloqueada>
 
           {erro && (
             <div style={s.erroBox}>
