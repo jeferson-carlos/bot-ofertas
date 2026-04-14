@@ -41,9 +41,10 @@ function calcularDesconto(precoMax: string, precoMin: string): number {
   return 0
 }
 
-async function buscarPorKeyword(
+async function buscarPagina(
   keyword: string,
   sortType: number,
+  page: number,
   appId: string,
   secret: string
 ): Promise<any[]> {
@@ -53,7 +54,7 @@ async function buscarPorKeyword(
         keyword: "${keyword}",
         listType: 1,
         sortType: ${sortType},
-        page: 1,
+        page: ${page},
         limit: 50
       ) {
         nodes {
@@ -70,12 +71,50 @@ async function buscarPorKeyword(
   const data = await res.json()
 
   if (data.errors) {
-    console.error(`Erro API Shopee (${keyword}):`, data.errors)
+    console.error(`Erro API Shopee (${keyword} p${page}):`, data.errors)
     return []
   }
 
-  const nodes = data?.data?.productOfferV2?.nodes ?? []
-  return nodes.filter((n: any) => calcularDesconto(n.priceMax, n.priceMin) >= DESCONTO_MIN)
+  return data?.data?.productOfferV2?.nodes ?? []
+}
+
+async function buscarPorKeyword(
+  keyword: string,
+  sortType: number,
+  appId: string,
+  secret: string
+): Promise<any[]> {
+  // Busca página 1 e página 2 em paralelo → até 100 produtos por keyword
+  const [pagina1, pagina2] = await Promise.all([
+    buscarPagina(keyword, sortType, 1, appId, secret),
+    buscarPagina(keyword, sortType, 2, appId, secret),
+  ])
+
+  // Combina e remove duplicatas pelo itemId
+  const vistos = new Set<string>()
+  const todos  = [...pagina1, ...pagina2].filter((n: any) => {
+    if (vistos.has(String(n.itemId))) return false
+    vistos.add(String(n.itemId))
+    return true
+  })
+
+  return todos.filter((n: any) => calcularDesconto(n.priceMax, n.priceMin) >= DESCONTO_MIN)
+}
+
+async function limparOfertas(): Promise<void> {
+  const agora = new Date()
+
+  const limite48h = new Date(agora.getTime() - 48 * 60 * 60 * 1000).toISOString()
+  const limite24h = new Date(agora.getTime() - 24 * 60 * 60 * 1000).toISOString()
+
+  const [r1, r2] = await Promise.all([
+    supabase.from("ofertas").delete().eq("status", "enviado").lt("enviado_em", limite48h),
+    supabase.from("ofertas").delete().eq("status", "descartado").lt("criado_em", limite24h),
+  ])
+
+  const enviados   = r1.count ?? 0
+  const descartados = r2.count ?? 0
+  console.log(`🧹 Limpeza: ${enviados} enviados (>48h) e ${descartados} descartados (>24h) removidos`)
 }
 
 async function salvarOfertas(ofertas: any[], userId: string | null): Promise<{ novos: number; duplicatas: number }> {
@@ -272,6 +311,7 @@ Deno.serve(async (req) => {
     }
 
     // ─── Chamada de cron (sem user_id) — processa todos os usuários ────────
+    await limparOfertas()
     console.log("🕐 Cron: processando todos os usuários com credenciais configuradas...")
 
     const { data: usuarios } = await supabase
