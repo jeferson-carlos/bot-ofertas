@@ -225,6 +225,7 @@ async function executarBuscas(
 }
 
 // Cron: sempre busca "oferta" (padrão) + keywords ativas do usuário, se existirem
+// O sort_type do "oferta" rotaciona pela hora atual (1→5) para variar os resultados
 async function processarUsuarioCron(userId: string, appId: string, secret: string): Promise<{ novos: number; duplicatas: number }> {
   const [kwResult, perfilResult] = await Promise.all([
     supabase.from("keywords").select("keyword, sort_type").eq("user_id", userId).eq("ativo", true),
@@ -234,8 +235,10 @@ async function processarUsuarioCron(userId: string, appId: string, secret: strin
   const keywords  = kwResult.data ?? []
   const blacklist = (perfilResult.data?.blacklist_termos ?? []) as string[]
 
+  const sortRotativo = (new Date().getUTCHours() % 5) + 1
+
   const lista = [
-    { keyword: "oferta", sort_type: 2 },
+    { keyword: "oferta", sort_type: sortRotativo },
     ...keywords,
   ]
 
