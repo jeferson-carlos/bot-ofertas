@@ -1,9 +1,6 @@
 import { createClient } from "jsr:@supabase/supabase-js@2"
 import { gerarLinkRastreavel, enviarTelegram } from "../_shared/index.ts"
 
-// Template dedicado para envio de link avulso (sem dados de oferta)
-const TEMPLATE_LINK = "🔗 *Link Shopee*\n\n🛒 [Ver produto]({link})"
-
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -79,7 +76,7 @@ Deno.serve(async (req) => {
       imagem_url:           null,
     }
 
-    const sucesso = await enviarTelegram(ofertaSimples, botToken, chatId, TEMPLATE_LINK)
+    const sucesso = await enviarTelegram(ofertaSimples, botToken, chatId, perfil?.telegram_template ?? null)
 
     if (!sucesso) {
       return Response.json(

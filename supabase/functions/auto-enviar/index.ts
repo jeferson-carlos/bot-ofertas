@@ -44,14 +44,14 @@ Deno.serve(async (_req) => {
 
     processados++
 
-    // Busca as 2 próximas ofertas pendentes do usuário (mais antigas primeiro)
+    // Busca as 10 próximas ofertas pendentes do usuário (mais antigas primeiro)
     const { data: ofertas } = await supabase
       .from("ofertas")
       .select("*")
       .eq("user_id", perfil.id)
       .eq("status", "pendente")
       .order("criado_em", { ascending: true })
-      .limit(2)
+      .limit(10)
 
     if (!ofertas || ofertas.length === 0) continue
 
