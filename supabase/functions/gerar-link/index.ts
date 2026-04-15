@@ -17,7 +17,7 @@ const URL_SHOPEE = /^https?:\/\/(www\.)?(shopee\.com\.br|shp\.ee|s\.shopee\.com\
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS })
 
-  const { url, acao, user_id: userId } = await req.json()
+  const { url, titulo, acao, user_id: userId } = await req.json()
 
   if (!userId) {
     return Response.json({ ok: false, erro: "Não autenticado" }, { status: 401, headers: CORS })
@@ -65,9 +65,9 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Objeto mínimo compatível com aplicarTemplate — apenas link é relevante aqui
+    // Objeto mínimo compatível com aplicarTemplate
     const ofertaSimples = {
-      titulo:               "",
+      titulo:               titulo || "",
       preco_desconto:       "0",
       preco_original:       "0",
       percentual_desconto:  0,

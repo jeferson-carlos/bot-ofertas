@@ -10,6 +10,7 @@ export default function GerarLink() {
   const { user } = useAuth()
 
   const [url,        setUrl]        = useState('')
+  const [titulo,     setTitulo]     = useState('')
   const [linkGerado, setLinkGerado] = useState(null)
   const [carregando, setCarregando] = useState(false)
   const [enviando,   setEnviando]   = useState(false)
@@ -32,7 +33,7 @@ export default function GerarLink() {
         'Content-Type':  'application/json',
         'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_KEY}`
       },
-      body: JSON.stringify({ url: url.trim(), acao, user_id: user.id })
+      body: JSON.stringify({ url: url.trim(), titulo: titulo.trim(), acao, user_id: user.id })
     })
   }
 
@@ -124,6 +125,15 @@ export default function GerarLink() {
           </button>
         </div>
 
+        <label style={{ ...s.label, marginTop: '16px' }}>Descrição do produto <span style={s.labelOpcional}>(opcional)</span></label>
+        <input
+          type="text"
+          placeholder="Ex: Fone Bluetooth JBL Tune 510BT"
+          value={titulo}
+          onChange={e => setTitulo(e.target.value)}
+          style={s.input}
+        />
+
         {erro && (
           <p style={s.erro}>{erro}</p>
         )}
@@ -187,6 +197,11 @@ const s = {
     fontWeight: '500',
     color: color.textSecondary,
     marginBottom: '8px',
+  },
+  labelOpcional: {
+    fontSize: '12px',
+    fontWeight: '400',
+    color: 'rgba(148,163,184,0.55)',
   },
   inputRow: {
     display: 'flex',
