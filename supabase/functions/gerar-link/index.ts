@@ -1,5 +1,8 @@
 import { createClient } from "jsr:@supabase/supabase-js@2"
-import { gerarLinkRastreavel } from "../_shared/index.ts"
+import { gerarLinkRastreavel, enviarTelegram } from "../_shared/index.ts"
+
+// Template dedicado para envio de link avulso (sem dados de oferta)
+const TEMPLATE_LINK = "🔗 *Link Shopee*\n\n🛒 [Ver produto]({link})"
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -32,7 +35,7 @@ Deno.serve(async (req) => {
 
   const { data: perfil } = await supabase
     .from("profiles")
-    .select("shopee_app_id, shopee_secret, telegram_bot_token, telegram_chat_id")
+    .select("shopee_app_id, shopee_secret, telegram_bot_token, telegram_chat_id, telegram_template")
     .eq("id", userId)
     .single()
 
@@ -65,16 +68,20 @@ Deno.serve(async (req) => {
       )
     }
 
-    const mensagem = `🛒 *Link Shopee*\n\n[Ver produto](${link})`
+    // Objeto mínimo compatível com aplicarTemplate — apenas link é relevante aqui
+    const ofertaSimples = {
+      titulo:               "",
+      preco_desconto:       "0",
+      preco_original:       "0",
+      percentual_desconto:  0,
+      loja:                 "Shopee",
+      link_afiliado:        link,
+      imagem_url:           null,
+    }
 
-    const res  = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-      method:  "POST",
-      headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ chat_id: chatId, text: mensagem, parse_mode: "Markdown" })
-    })
-    const data = await res.json()
+    const sucesso = await enviarTelegram(ofertaSimples, botToken, chatId, TEMPLATE_LINK)
 
-    if (!data.ok) {
+    if (!sucesso) {
       return Response.json(
         { ok: false, erro: "Falha ao enviar no Telegram. Verifique as credenciais em Configurações." },
         { status: 500, headers: CORS }
