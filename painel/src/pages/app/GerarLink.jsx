@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { supabase } from '../../supabaseClient'
 import { useAuth } from '../../contexts/AuthContext'
 import { color, shadow, radius, transition } from '../../theme'
 
@@ -26,10 +25,15 @@ export default function GerarLink() {
     setEnviado(false)
   }
 
-  async function getAuthHeader() {
-    const { data: { session } } = await supabase.auth.getSession()
-    const token = session?.access_token ?? import.meta.env.VITE_SUPABASE_KEY
-    return `Bearer ${token}`
+  function fetchLink(acao) {
+    return fetch(GERAR_LINK_URL, {
+      method:  'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_KEY}`
+      },
+      body: JSON.stringify({ url: url.trim(), acao, user_id: user.id })
+    })
   }
 
   async function handleGerar() {
@@ -45,14 +49,7 @@ export default function GerarLink() {
 
     setCarregando(true)
     try {
-      const res  = await fetch(GERAR_LINK_URL, {
-        method:  'POST',
-        headers: {
-          'Content-Type':  'application/json',
-          'Authorization': await getAuthHeader()
-        },
-        body: JSON.stringify({ url: url.trim(), acao: 'gerar' })
-      })
+      const res  = await fetchLink('gerar')
       const data = await res.json()
       if (data.ok) {
         setLinkGerado(data.link)
@@ -81,14 +78,7 @@ export default function GerarLink() {
     setEnviado(false)
     setEnviando(true)
     try {
-      const res  = await fetch(GERAR_LINK_URL, {
-        method:  'POST',
-        headers: {
-          'Content-Type':  'application/json',
-          'Authorization': await getAuthHeader()
-        },
-        body: JSON.stringify({ url: url.trim(), acao: 'enviar' })
-      })
+      const res  = await fetchLink('enviar')
       const data = await res.json()
       if (data.ok) {
         setEnviado(true)

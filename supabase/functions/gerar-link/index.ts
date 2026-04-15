@@ -6,17 +6,6 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
 )
 
-function getUserIdFromJWT(authHeader: string): string | null {
-  try {
-    const token   = authHeader.replace("Bearer ", "")
-    const payload = token.split(".")[1]
-    const decoded = JSON.parse(atob(payload))
-    return decoded.sub ?? null
-  } catch {
-    return null
-  }
-}
-
 const CORS = {
   "Access-Control-Allow-Origin":  "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -28,14 +17,11 @@ const URL_SHOPEE = /^https?:\/\/(www\.)?(shopee\.com\.br|shp\.ee|s\.shopee\.com\
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS })
 
-  const authHeader = req.headers.get("Authorization") ?? ""
-  const userId     = getUserIdFromJWT(authHeader)
+  const { url, acao, user_id: userId } = await req.json()
 
   if (!userId) {
     return Response.json({ ok: false, erro: "Não autenticado" }, { status: 401, headers: CORS })
   }
-
-  const { url, acao } = await req.json()
 
   if (!url || !URL_SHOPEE.test(url)) {
     return Response.json(
