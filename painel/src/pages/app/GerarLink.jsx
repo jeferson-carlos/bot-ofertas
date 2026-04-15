@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { supabase } from '../../supabaseClient'
 import { useAuth } from '../../contexts/AuthContext'
 import { color, shadow, radius, transition } from '../../theme'
 
@@ -25,6 +26,12 @@ export default function GerarLink() {
     setEnviado(false)
   }
 
+  async function getAuthHeader() {
+    const { data: { session } } = await supabase.auth.getSession()
+    const token = session?.access_token ?? import.meta.env.VITE_SUPABASE_KEY
+    return `Bearer ${token}`
+  }
+
   async function handleGerar() {
     setErro(null)
     setLinkGerado(null)
@@ -42,7 +49,7 @@ export default function GerarLink() {
         method:  'POST',
         headers: {
           'Content-Type':  'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_KEY}`
+          'Authorization': await getAuthHeader()
         },
         body: JSON.stringify({ url: url.trim(), acao: 'gerar' })
       })
@@ -78,7 +85,7 @@ export default function GerarLink() {
         method:  'POST',
         headers: {
           'Content-Type':  'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_KEY}`
+          'Authorization': await getAuthHeader()
         },
         body: JSON.stringify({ url: url.trim(), acao: 'enviar' })
       })
@@ -169,7 +176,7 @@ const s = {
   titulo: {
     fontSize: '22px',
     fontWeight: '700',
-    color: color.text,
+    color: color.textPrimary,
     margin: '0 0 6px',
   },
   subtitulo: {
@@ -178,11 +185,11 @@ const s = {
     margin: 0,
   },
   card: {
-    background: '#111827',
-    border: '1px solid rgba(255,255,255,0.07)',
+    background: color.card,
+    border: `1px solid ${color.border}`,
     borderRadius: radius.lg,
     padding: '24px',
-    boxShadow: shadow.md,
+    boxShadow: shadow.card,
   },
   label: {
     display: 'block',
@@ -198,10 +205,10 @@ const s = {
   input: {
     flex: 1,
     padding: '10px 14px',
-    background: '#0b0f1a',
-    border: '1px solid rgba(255,255,255,0.10)',
+    background: color.input,
+    border: `1px solid ${color.border}`,
     borderRadius: radius.md,
-    color: color.text,
+    color: color.textPrimary,
     fontSize: '14px',
     outline: 'none',
     transition: transition.fast,
@@ -264,8 +271,8 @@ const s = {
     marginBottom: '8px',
   },
   linkBox: {
-    background: '#0b0f1a',
-    border: '1px solid rgba(99,102,241,0.25)',
+    background: color.input,
+    border: `1px solid ${color.primaryBorder}`,
     borderRadius: radius.md,
     padding: '10px 14px',
     wordBreak: 'break-all',
