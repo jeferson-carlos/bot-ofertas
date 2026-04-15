@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
       imagem_url:           null,
     }
 
-    const sucesso = await enviarTelegram(ofertaSimples, botToken, chatId, perfil.telegram_template ?? TEMPLATE_LINK)
+    const sucesso = await enviarTelegram(ofertaSimples, botToken, chatId, TEMPLATE_LINK)
 
     if (!sucesso) {
       return Response.json(
