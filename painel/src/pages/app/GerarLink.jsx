@@ -6,17 +6,30 @@ const GERAR_LINK_URL = import.meta.env.VITE_SUPABASE_URL + '/functions/v1/gerar-
 
 const URL_SHOPEE = /^https?:\/\/(www\.)?(shopee\.com\.br|shp\.ee|s\.shopee\.com\.br)/i
 
+const TEMPLATE_PADRAO =
+  "🔥 *OFERTA SHOPEE*\n\n" +
+  "📦 {titulo}\n\n" +
+  "🏪 Loja: {loja}\n" +
+  "💰 De: ~R$ {preco_original}~\n" +
+  "✅ Por: *R$ {preco}*\n" +
+  "📉 Desconto: *{desconto}% OFF*\n\n" +
+  "🛒 [Comprar agora]({link})"
+
 export default function GerarLink() {
   const { user } = useAuth()
 
-  const [url,        setUrl]        = useState('')
-  const [titulo,     setTitulo]     = useState('')
-  const [linkGerado, setLinkGerado] = useState(null)
-  const [carregando, setCarregando] = useState(false)
-  const [enviando,   setEnviando]   = useState(false)
-  const [erro,       setErro]       = useState(null)
-  const [copiado,    setCopiado]    = useState(false)
-  const [enviado,    setEnviado]    = useState(false)
+  const [url,          setUrl]          = useState('')
+  const [titulo,       setTitulo]       = useState('')
+  const [preco,        setPreco]        = useState('')
+  const [precoOriginal,setPrecoOriginal]= useState('')
+  const [desconto,     setDesconto]     = useState('')
+  const [loja,         setLoja]         = useState('')
+  const [linkGerado,   setLinkGerado]   = useState(null)
+  const [carregando,   setCarregando]   = useState(false)
+  const [enviando,     setEnviando]     = useState(false)
+  const [erro,         setErro]         = useState(null)
+  const [copiado,      setCopiado]      = useState(false)
+  const [enviado,      setEnviado]      = useState(false)
 
   function handleUrlChange(e) {
     setUrl(e.target.value)
@@ -26,6 +39,16 @@ export default function GerarLink() {
     setEnviado(false)
   }
 
+  function gerarPrevia(link) {
+    return TEMPLATE_PADRAO
+      .replace(/{titulo}/g,         titulo       || '(descrição do produto)')
+      .replace(/{preco}/g,          preco        || '0,00')
+      .replace(/{preco_original}/g, precoOriginal|| '0,00')
+      .replace(/{desconto}/g,       desconto     || '0')
+      .replace(/{loja}/g,           loja         || 'Shopee')
+      .replace(/{link}/g,           link         || '(link rastreável)')
+  }
+
   function fetchLink(acao) {
     return fetch(GERAR_LINK_URL, {
       method:  'POST',
@@ -33,7 +56,16 @@ export default function GerarLink() {
         'Content-Type':  'application/json',
         'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_KEY}`
       },
-      body: JSON.stringify({ url: url.trim(), titulo: titulo.trim(), acao, user_id: user.id })
+      body: JSON.stringify({
+        url:          url.trim(),
+        titulo:       titulo.trim(),
+        preco:        preco.trim(),
+        precoOriginal:precoOriginal.trim(),
+        desconto:     desconto.trim(),
+        loja:         loja.trim(),
+        acao,
+        user_id: user.id,
+      })
     })
   }
 
@@ -95,6 +127,7 @@ export default function GerarLink() {
   }
 
   const podeGerar = url.trim().length > 0 && !carregando
+  const previa    = gerarPrevia(linkGerado)
 
   return (
     <div style={s.page}>
@@ -104,6 +137,8 @@ export default function GerarLink() {
       </div>
 
       <div style={s.card}>
+
+        {/* URL */}
         <label style={s.label}>URL do produto Shopee</label>
         <div style={s.inputRow}>
           <input
@@ -119,25 +154,84 @@ export default function GerarLink() {
             disabled={!podeGerar}
             style={{ ...s.btnGerar, ...(podeGerar ? {} : s.btnDesabilitado) }}
           >
-            {carregando ? (
-              <span style={s.spinner} />
-            ) : 'Gerar Link'}
+            {carregando ? <span style={s.spinner} /> : 'Gerar Link'}
           </button>
         </div>
 
-        <label style={{ ...s.label, marginTop: '16px' }}>Descrição do produto <span style={s.labelOpcional}>(opcional)</span></label>
-        <input
-          type="text"
-          placeholder="Ex: Fone Bluetooth JBL Tune 510BT"
-          value={titulo}
-          onChange={e => setTitulo(e.target.value)}
-          style={s.input}
-        />
+        {/* Dados do produto */}
+        <div style={s.secao}>
+          <p style={s.secaoTitulo}>Dados do produto <span style={s.labelOpcional}>(opcional — usados na mensagem do Telegram)</span></p>
 
-        {erro && (
-          <p style={s.erro}>{erro}</p>
-        )}
+          <label style={s.label}>Descrição / título</label>
+          <input
+            type="text"
+            placeholder="Ex: Fone Bluetooth JBL Tune 510BT"
+            value={titulo}
+            onChange={e => setTitulo(e.target.value)}
+            style={{ ...s.input, width: '100%', boxSizing: 'border-box' }}
+          />
 
+          <div style={s.gridTres}>
+            <div>
+              <label style={s.label}>Preço com desconto (R$)</label>
+              <input
+                type="text"
+                placeholder="Ex: 149,90"
+                value={preco}
+                onChange={e => setPreco(e.target.value)}
+                style={s.input}
+              />
+            </div>
+            <div>
+              <label style={s.label}>Preço original (R$)</label>
+              <input
+                type="text"
+                placeholder="Ex: 299,90"
+                value={precoOriginal}
+                onChange={e => setPrecoOriginal(e.target.value)}
+                style={s.input}
+              />
+            </div>
+            <div>
+              <label style={s.label}>Desconto (%)</label>
+              <input
+                type="text"
+                placeholder="Ex: 50"
+                value={desconto}
+                onChange={e => setDesconto(e.target.value)}
+                style={s.input}
+              />
+            </div>
+          </div>
+
+          <label style={{ ...s.label, marginTop: '14px' }}>Loja</label>
+          <input
+            type="text"
+            placeholder="Ex: Loja Oficial JBL"
+            value={loja}
+            onChange={e => setLoja(e.target.value)}
+            style={{ ...s.input, width: '100%', boxSizing: 'border-box' }}
+          />
+        </div>
+
+        {erro && <p style={s.erro}>{erro}</p>}
+
+        {/* Prévia da mensagem */}
+        <div style={s.secao}>
+          <label style={s.labelResultado}>Prévia da mensagem</label>
+          <textarea
+            readOnly
+            value={previa}
+            style={s.previa}
+          />
+          <p style={s.previaHint}>
+            {linkGerado
+              ? 'Link rastreável já inserido na prévia.'
+              : 'O link rastreável será inserido após clicar em "Gerar Link".'}
+          </p>
+        </div>
+
+        {/* Resultado — só aparece após gerar */}
         {linkGerado && (
           <div style={s.resultado}>
             <label style={s.labelResultado}>Seu link rastreável</label>
@@ -146,7 +240,7 @@ export default function GerarLink() {
             </div>
             <div style={s.acoes}>
               <button onClick={handleCopiar} style={s.btnCopiar}>
-                {copiado ? '✓ Copiado!' : 'Copiar'}
+                {copiado ? '✓ Copiado!' : 'Copiar link'}
               </button>
               <button
                 onClick={handleEnviar}
@@ -160,6 +254,7 @@ export default function GerarLink() {
             </div>
           </div>
         )}
+
       </div>
     </div>
   )
@@ -168,7 +263,7 @@ export default function GerarLink() {
 const s = {
   page: {
     padding: '32px 24px',
-    maxWidth: '640px',
+    maxWidth: '680px',
   },
   header: {
     marginBottom: '28px',
@@ -190,6 +285,23 @@ const s = {
     borderRadius: radius.lg,
     padding: '24px',
     boxShadow: shadow.card,
+  },
+  secao: {
+    marginTop: '24px',
+    paddingTop: '20px',
+    borderTop: '1px solid rgba(255,255,255,0.07)',
+  },
+  secaoTitulo: {
+    fontSize: '13px',
+    fontWeight: '600',
+    color: color.textSecondary,
+    margin: '0 0 16px',
+  },
+  gridTres: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr 1fr',
+    gap: '12px',
+    marginTop: '14px',
   },
   label: {
     display: 'block',
@@ -262,6 +374,28 @@ const s = {
     fontSize: '13px',
     color: '#f87171',
     margin: '10px 0 0',
+  },
+  previa: {
+    display: 'block',
+    width: '100%',
+    boxSizing: 'border-box',
+    minHeight: '180px',
+    padding: '14px 16px',
+    background: 'rgba(0,0,0,0.25)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    borderRadius: radius.md,
+    color: '#cbd5e1',
+    fontSize: '14px',
+    fontFamily: 'monospace',
+    lineHeight: '1.6',
+    resize: 'vertical',
+    outline: 'none',
+    cursor: 'default',
+  },
+  previaHint: {
+    fontSize: '12px',
+    color: 'rgba(148,163,184,0.5)',
+    margin: '8px 0 0',
   },
   resultado: {
     marginTop: '24px',
