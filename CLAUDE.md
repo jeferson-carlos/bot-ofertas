@@ -27,6 +27,7 @@ Automático via GitHub Actions ao fazer push em `main` com mudanças em `painel/
 supabase functions deploy buscar-ofertas
 supabase functions deploy enviar-oferta
 supabase functions deploy auto-enviar
+supabase functions deploy gerar-link
 supabase functions deploy diagnostico-shopee
 ```
 
@@ -61,14 +62,17 @@ GitHub Actions cron (a cada 5 minutos)
       → itera perfis com auto_enviar=true, plano Pro/Premium e credenciais completas
       → respeita intervalo de 5 min por usuário (ultima_auto_envio_em)
       → gera link rastreável fresco via generateShortLink
-      → envia até 2 ofertas pendentes por ciclo para o Telegram do usuário
+      → envia até 10 ofertas pendentes por ciclo para o Telegram do usuário
 
 Usuário no painel
   → visualiza suas ofertas (filtradas por user_id via RLS)
   → clica "Enviar" → POST /functions/v1/enviar-oferta
       → gera link rastreável fresco via generateShortLink
-      → aplica telegram_template do usuário (ou template padrão)
+      → aplica telegram_template do usuário (ou TEMPLATE_PADRAO como fallback)
       → envia mensagem no Telegram do usuário
+  → acessa "Gerar Link" → preenche URL + dados do produto → POST /functions/v1/gerar-link
+      → gera link rastreável fresco via generateShortLink
+      → pode enviar direto ao Telegram com telegram_template do usuário (ou TEMPLATE_PADRAO)
 ```
 
 ### Estrutura de pastas
@@ -77,6 +81,7 @@ Usuário no painel
   - `buscar-ofertas` — coleta de ofertas (cron + manual)
   - `enviar-oferta` — envio manual/reenvio/descarte
   - `auto-enviar` — envio automático periódico (Pro+)
+  - `gerar-link` — gera link rastreável a partir de URL pública Shopee; opcionalmente envia ao Telegram
   - `diagnostico-shopee` — diagnóstico de credenciais Shopee (verify_jwt desabilitado)
   - `_shared/index.ts` — utilitários compartilhados: `gerarLinkRastreavel`, `enviarTelegram`, `aplicarTemplate`, `sha256hex`, `getShopeeHeaders`, `TEMPLATE_PADRAO`
 - `supabase/migrations/` — SQL migrations numeradas por fase (fase0..fase7)
@@ -122,16 +127,26 @@ RLS habilitado em `ofertas` e `keywords`: cada usuário vê apenas seus dados. E
 - Recebe `{ id, acao }` onde `acao` é `"enviar"`, `"descartar"` ou `"reenviar"`
 - `"enviar"` bloqueia reenvio se status já for "enviado"; `"reenviar"` ignora esse check
 - Gera link rastreável fresco via `gerarLinkRastreavel` (mutation `generateShortLink`) antes de enviar
-- Aplica `telegram_template` do usuário com variáveis `{titulo}`, `{preco}`, `{preco_original}`, `{desconto}`, `{loja}`, `{link}`
+- Aplica `telegram_template` do usuário (ou `TEMPLATE_PADRAO` como fallback) com variáveis `{titulo}`, `{preco}`, `{preco_original}`, `{desconto}`, `{loja}`, `{link}`
 - Credenciais: usa **apenas** as do usuário (Telegram e Shopee) — sem fallback para env vars
 - Falha se credenciais Shopee ausentes (necessárias para gerar link rastreável)
 
 **`auto-enviar`**
 - Chamado pelo GitHub Actions a cada 5 minutos
 - Filtra perfis com `auto_enviar=true`, plano `pro` ou `premium` e credenciais completas (Telegram + Shopee)
-- Por usuário: respeita intervalo de 5 min via `ultima_auto_envio_em`; envia até 2 ofertas pendentes por ciclo (mais antigas primeiro)
+- Por usuário: respeita intervalo de 5 min via `ultima_auto_envio_em`; envia até **10** ofertas pendentes por ciclo (mais antigas primeiro)
 - Gera link rastreável fresco para cada oferta antes de enviar
+- Aplica `telegram_template` do usuário (ou `TEMPLATE_PADRAO` como fallback)
 - Atualiza `ultima_auto_envio_em` apenas se ao menos uma oferta foi enviada no ciclo
+
+**`gerar-link`**
+- Recebe `{ url, titulo, preco, precoOriginal, desconto, loja, acao, user_id }`
+- Valida que a URL é da Shopee (`shopee.com.br`, `shp.ee` ou `s.shopee.com.br`)
+- Gera link rastreável fresco via `gerarLinkRastreavel` usando credenciais Shopee do usuário
+- Se `acao === "enviar"`: monta objeto de oferta com os dados informados e envia ao Telegram
+  - Aplica `telegram_template` do usuário (ou `TEMPLATE_PADRAO` como fallback)
+  - Campos de produto são opcionais; sem eles `{titulo}`, `{preco}`, etc. ficam em branco/zero
+- `verify_jwt` desabilitado; autenticação via `user_id` no body
 
 **`diagnostico-shopee`**
 - Endpoint de diagnóstico de credenciais Shopee; `verify_jwt` desabilitado no gateway
