@@ -15,6 +15,7 @@ import Configuracoes from './pages/app/Configuracoes'
 import Tutorial      from './pages/app/Tutorial'
 import Perfil        from './pages/app/Perfil'
 import Relatorios    from './pages/app/Relatorios'
+import GerarLink     from './pages/app/GerarLink'
 
 export default function App() {
   return (
@@ -34,6 +35,7 @@ export default function App() {
                 <Route path="dashboard"       element={<Dashboard />} />
                 <Route path="ofertas"         element={<Ofertas />} />
                 <Route path="keywords"        element={<Keywords />} />
+                <Route path="gerarlink"       element={<GerarLink />} />
                 <Route path="planos"          element={<Planos />} />
                 <Route path="configuracoes"   element={<Configuracoes />} />
                 <Route path="tutorial"        element={<Tutorial />} />
