@@ -104,7 +104,7 @@ Usuário no painel
 ### Banco de dados (Supabase)
 Tabelas principais:
 - `profiles` — plano, credenciais Telegram/Shopee, `ultima_coleta_em`, `blacklist_termos` (text[]), `telegram_template` (text), `auto_enviar` (boolean), `ultima_auto_envio_em` (timestamptz)
-- `ofertas` — produtos coletados com `user_id`, `status` (pendente/enviado/descartado), `enviado_em`, `criado_em`
+- `ofertas` — produtos coletados com `user_id`, `status` (pendente/enviado/descartado), `enviado_em`, `criado_em`, `score` (numeric — qualidade da oferta, 0..1)
 - `keywords` — palavras-chave por usuário com `sort_type` (1-5: relevância, mais vendidos, menor/maior preço, comissão), `ativo` (boolean)
 - `uso_busca` — contador diário de buscas manuais por usuário
 - `lista_espera` — leads de planos pagos
@@ -117,10 +117,13 @@ RLS habilitado em `ofertas` e `keywords`: cada usuário vê apenas seus dados. E
 - Cron (sem `user_id`): executa `limparOfertas()` primeiro (remove enviados >48h e descartados >24h), depois itera `profiles` com `shopee_app_id` não-nulo
 - Cron usa `processarUsuarioCron`: busca keyword "oferta" com `sort_type` rotativo pela hora UTC (`(hora % 5) + 1`) + todas as keywords ativas do usuário
 - Manual (com `user_id`): usa `processarUsuarioManual` — **apenas keywords ativas**, sem fallback para "oferta"; verifica limite diário (`uso_busca`)
-- Limites de busca manual: `free=0`, `pro=5`, `premium=∞`
+- Limites de busca manual: `free=2`, `pro=5`, `premium=∞`
 - Por keyword: busca páginas 1 e 2 em paralelo (50 produtos cada → até 100 por keyword), remove duplicatas por `itemId`
-- Filtra por `DESCONTO_MIN = 10%` e por `blacklist_termos` do usuário (título e loja, case-insensitive) antes de salvar
+- Filtros de qualidade antes de salvar (em ordem): `DESCONTO_MIN=30%`, `PRECO_MIN=R$20` (2000 centavos), `ECONOMIA_MIN=R$15` de economia absoluta, `rating < 4.0 com < 20 avaliações` (ignorado silenciosamente se campo ausente na API)
+- Scoring: `score = desconto*0.5 + (economia/100)*0.3 + rating_norm*0.2`; rating ausente usa 0.5 neutro; salva apenas as top 20 por keyword ordenadas por score
+- Score persistido no campo `ofertas.score` (migration aplicada manualmente no Supabase)
 - Desconto calculado via `(1 - priceMin/priceMax)` — não confia em `priceDiscountRate` da API
+- Query GraphQL inclui `ratingStar reviewCount` além dos campos originais
 - Credenciais: usa **apenas** as do usuário (`shopee_app_id` / `shopee_secret` do profile) — sem fallback para env vars
 
 **`enviar-oferta`**

@@ -190,6 +190,7 @@ async function salvarOfertas(ofertas: any[], userId: string | null): Promise<{ n
       imagem_url:          oferta.imageUrl,
       loja:                oferta.shopName,
       status:              "pendente",
+      score:               oferta._score ?? null,
     }
     if (userId) registro.user_id = userId
 
