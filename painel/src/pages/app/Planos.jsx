@@ -14,6 +14,7 @@ const PLANOS = [
     features: [
       { ok: true,  texto: 'Painel de ofertas' },
       { ok: true,  texto: 'Envio manual para Telegram' },
+      { ok: true,  texto: '2 buscas manuais por dia' },
       { ok: false, texto: 'Keywords personalizadas' },
       { ok: false, texto: 'Busca automática de ofertas' },
       { ok: false, texto: 'Credenciais próprias Shopee' },

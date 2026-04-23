@@ -14,10 +14,10 @@ const PLANOS = [
       'Acesso ao painel de ofertas',
       'Visualizar últimas 10 ofertas',
       'Filtros por status',
+      '2 buscas manuais por dia',
     ],
     bloqueado: [
       'Keywords personalizadas',
-      'Busca manual de ofertas',
       'Envio ao Telegram',
     ],
     cta: 'Criar conta grátis',
@@ -68,7 +68,7 @@ const PASSOS = [
 const FAQ = [
   { q: 'Como funciona a coleta de ofertas?', a: 'Utilizamos a API oficial de afiliados da Shopee. A cada hora buscamos produtos nas suas keywords e calculamos o desconto real a partir dos preços — sem depender de informações imprecisas dos vendedores.' },
   { q: 'Preciso ter um canal no Telegram?', a: 'Sim. Você configura o seu canal do Telegram no painel e todas as ofertas aprovadas são enviadas diretamente para ele, já formatadas com foto, preços e link de afiliado.' },
-  { q: 'O plano Free tem acesso a quê?', a: 'No plano Free você pode visualizar as ofertas coletadas e explorar o painel. Para enviar ao Telegram, usar keywords personalizadas e buscar manualmente, é necessário o plano Pro.' },
+  { q: 'O plano Free tem acesso a quê?', a: 'No plano Free você pode visualizar as ofertas coletadas, explorar o painel e fazer até 2 buscas manuais por dia. Para enviar ao Telegram e usar keywords personalizadas, é necessário o plano Pro.' },
   { q: 'Posso cancelar quando quiser?', a: 'Sim. Sem fidelidade e sem burocracia. Você cancela a qualquer momento diretamente pelo painel, sem precisar entrar em contato.' },
   { q: 'O que é a lista de espera?', a: 'Os planos pagos estão em fase de lançamento. Ao entrar na lista você será o primeiro a saber quando abrirem as vagas — e pode garantir condições especiais de early adopter.' },
 ]

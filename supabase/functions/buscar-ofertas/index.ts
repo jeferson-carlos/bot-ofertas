@@ -1,7 +1,12 @@
 import { createClient } from "jsr:@supabase/supabase-js@2"
 
 const BASE_URL = "https://open-api.affiliate.shopee.com.br/graphql"
-const DESCONTO_MIN         = 10
+const DESCONTO_MIN         = 30   // % mínimo de desconto
+const PRECO_MIN            = 2000 // centavos (R$20)
+const ECONOMIA_MIN_REAIS   = 15   // R$15 de economia absoluta mínima
+const RATING_MIN           = 4.0
+const REVIEWS_MIN          = 20
+const TOP_OFERTAS_POR_KW   = 20   // máx. ofertas salvas por keyword/execução
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -41,6 +46,36 @@ function calcularDesconto(precoMax: string, precoMin: string): number {
   return 0
 }
 
+function calcularEconomiaReais(precoMax: string, precoMin: string): number {
+  const max = parseFloat(precoMax || "0")
+  const min = parseFloat(precoMin || "0")
+  return (max - min) / 100 // API retorna centavos
+}
+
+function calcularScore(desconto: number, economiaReais: number, rating: number | null): number {
+  const descontoNorm     = desconto / 100
+  const economiaNorm     = Math.min(economiaReais / 100, 1.0)
+  const ratingNorm       = rating !== null ? Math.min(Math.max((rating - 4.0) / 1.0, 0), 1.0) : 0.5
+  return descontoNorm * 0.5 + economiaNorm * 0.3 + ratingNorm * 0.2
+}
+
+function passaFiltrosQualidade(node: any): boolean {
+  const priceMax  = parseFloat(node.priceMax  || "0")
+  const priceMin  = parseFloat(node.priceMin  || "0")
+  const desconto  = calcularDesconto(node.priceMax, node.priceMin)
+  const economia  = calcularEconomiaReais(node.priceMax, node.priceMin)
+
+  if (desconto < DESCONTO_MIN)         return false
+  if (priceMin < PRECO_MIN)            return false
+  if (economia < ECONOMIA_MIN_REAIS)   return false
+
+  const rating     = node.ratingStar   != null ? parseFloat(node.ratingStar)  : null
+  const reviews    = node.reviewCount  != null ? parseInt(node.reviewCount)   : null
+  if (rating !== null && reviews !== null && rating < RATING_MIN && reviews < REVIEWS_MIN) return false
+
+  return true
+}
+
 async function buscarPagina(
   keyword: string,
   sortType: number,
@@ -61,6 +96,7 @@ async function buscarPagina(
           itemId productName priceMin priceMax
           priceDiscountRate commissionRate
           offerLink imageUrl shopName
+          ratingStar reviewCount
         }
         pageInfo { page limit hasNextPage }
       }
@@ -98,7 +134,20 @@ async function buscarPorKeyword(
     return true
   })
 
-  return todos.filter((n: any) => calcularDesconto(n.priceMax, n.priceMin) >= DESCONTO_MIN)
+  const filtrados = todos.filter(passaFiltrosQualidade)
+
+  // Calcula score e ordena; salva apenas as top N por keyword
+  const comScore = filtrados.map((n: any) => ({
+    ...n,
+    _score: calcularScore(
+      calcularDesconto(n.priceMax, n.priceMin),
+      calcularEconomiaReais(n.priceMax, n.priceMin),
+      n.ratingStar != null ? parseFloat(n.ratingStar) : null
+    )
+  }))
+  comScore.sort((a: any, b: any) => b._score - a._score)
+
+  return comScore.slice(0, TOP_OFERTAS_POR_KW)
 }
 
 async function limparOfertas(): Promise<void> {
@@ -151,7 +200,7 @@ async function salvarOfertas(ofertas: any[], userId: string | null): Promise<{ n
   return { novos, duplicatas }
 }
 
-const LIMITE_BUSCA = { free: 0, pro: 5, premium: Infinity }
+const LIMITE_BUSCA = { free: 2, pro: 5, premium: Infinity }
 
 const CORS = {
   "Access-Control-Allow-Origin":  "*",
